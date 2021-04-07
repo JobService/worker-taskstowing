@@ -5,7 +5,7 @@
 DROP TABLE IF EXISTS public.stowed_task;
 
 CREATE TABLE public.stowed_task (
-  id SERIAL PRIMARY KEY,
+  id serial NOT NULL,
   partition_id varchar(40) NOT NULL,
   job_id varchar(48) NOT NULL,
   task_classifier varchar(255) NOT NULL,
@@ -15,8 +15,9 @@ CREATE TABLE public.stowed_task (
   context bytea NOT NULL,
   "to" varchar(255) NOT NULL,
   tracking_info bytea NOT NULL,
-  source_info bytea,
-  correlation_id varchar(255)
+  source_info bytea NULL,
+  correlation_id varchar(255) NULL,
+  CONSTRAINT pk_stowed_task PRIMARY KEY (id)
 --   CONSTRAINT fk_stowed_task FOREIGN KEY (partition_id, job_id) REFERENCES job(partition_id, job_id)
 );
 CREATE INDEX idx_partition_id_and_job_id ON public.stowed_task USING btree (partition_id, job_id);

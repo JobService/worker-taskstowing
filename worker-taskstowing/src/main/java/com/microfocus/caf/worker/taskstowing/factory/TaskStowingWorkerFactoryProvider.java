@@ -16,24 +16,21 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.caf.worker.taskstowing;
+package com.microfocus.caf.worker.taskstowing.factory;
 
-final class TaskStowingWorkerFailure
+import com.hpe.caf.api.Codec;
+import com.hpe.caf.api.ConfigurationSource;
+import com.hpe.caf.api.worker.DataStore;
+import com.hpe.caf.api.worker.WorkerException;
+import com.hpe.caf.api.worker.WorkerFactory;
+import com.hpe.caf.api.worker.WorkerFactoryProvider;
+
+public final class TaskStowingWorkerFactoryProvider implements WorkerFactoryProvider
 {
-    static final String TRACKING_INFO_NOT_PRESENT
-        = "Unable to stow task. Tracking info not present.";
-    static final String JOB_TASK_ID_NOT_PRESENT
-        = "Unable to stow task. Job task ID not present.";
-    static final String FAILED_TO_PARSE_PARTITION_ID_FROM_JOB_TASK_ID
-        = "Unable to stow task. Failed to parse partition ID from job task id.";
-    static final String FAILED_TO_PARSE_JOB_ID_FROM_JOB_TASK_ID
-        = "Unable to stow task. Failed to parse job ID from job task id.";
-    static final String FAILED_TO_SERIALIZE_TASK
-        = "Unable to stow task. Failed to serialize task.";
-    static final String FAILED_TO_WRITE_TO_DATABASE
-        = "Unable to stow task. Failed to write to database.";
-
-    private TaskStowingWorkerFailure()
+    @Override
+    public WorkerFactory getWorkerFactory(final ConfigurationSource configSource, final DataStore dataStore, final Codec codec)
+        throws WorkerException
     {
+        return new TaskStowingWorkerFactory(configSource, dataStore, codec);
     }
 }

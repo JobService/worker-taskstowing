@@ -17,6 +17,13 @@
  * commercial license.
  */
 ({
+    workerName: "worker-taskstowing",
+    workerVersion: "${project.version}",
+    outputQueue: getenv("CAF_WORKER_OUTPUT_QUEUE") ||
+    (getenv("CAF_WORKER_BASE_QUEUE_NAME") || getenv("CAF_WORKER_NAME") || "worker") + "-out",
+    failureQueue: getenv("CAF_WORKER_FAILURE_QUEUE") ||
+    (getenv("CAF_WORKER_BASE_QUEUE_NAME") || getenv("CAF_WORKER_NAME") || "worker") + "-err",
+    threads: getenv("CAF_WORKER_THREADS") || 1,
     databaseHost: getenv("CAF_WORKER_TASKSTOWING_DATABASE_HOST") || "localhost",
     databasePort: getenv("CAF_WORKER_TASKSTOWING_DATABASE_PORT") || 5432,
     databaseName: getenv("CAF_WORKER_TASKSTOWING_DATABASE_NAME") || "jobservice",

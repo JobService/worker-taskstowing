@@ -92,9 +92,9 @@ public final class QueueServices
         this.errorChannel = connection.createChannel();
         this.outputChannel = connection.createChannel();
 
-        this.targetQueueName = "taskstowing-in";
-        this.outputQueueName = "taskstowing-out";
-        this.errorQueueName = "taskstowing-err";
+        this.targetQueueName = "worker-taskstowing-in";
+        this.outputQueueName = "worker-taskstowing-out";
+        this.errorQueueName = "worker-taskstowing-err";
         
         QUEUE_MESSAGES.put(outputQueueName, new ArrayList<>());
         QUEUE_MESSAGES.put(errorQueueName, new ArrayList<>());

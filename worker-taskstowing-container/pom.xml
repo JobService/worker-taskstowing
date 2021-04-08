@@ -47,14 +47,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.cafdataprocessing</groupId>
-            <artifactId>worker-document</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.cafdataprocessing</groupId>
-            <artifactId>worker-document-shared</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.github.workerframework</groupId>
             <artifactId>standard-worker-container</artifactId>
             <type>pom</type>
@@ -72,6 +64,11 @@
         </dependency>
 
         <!-- Test dependencies -->
+        <dependency>
+            <groupId>com.github.cafdataprocessing</groupId>
+            <artifactId>worker-document</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpasyncclient</artifactId>
@@ -410,8 +407,9 @@
                                     </inline>
                                 </assembly>
                                 <env>
-                                    <CAF_WORKER_INPUT_QUEUE>taskstowing-in</CAF_WORKER_INPUT_QUEUE>
-                                    <CAF_WORKER_FAILURE_QUEUE>taskstowing-err</CAF_WORKER_FAILURE_QUEUE>
+                                    <CAF_WORKER_INPUT_QUEUE>worker-taskstowing-in</CAF_WORKER_INPUT_QUEUE>
+                                    <CAF_WORKER_OUTPUT_QUEUE>worker-taskstowing-out</CAF_WORKER_OUTPUT_QUEUE>
+                                    <CAF_WORKER_FAILURE_QUEUE>worker-taskstowing-err</CAF_WORKER_FAILURE_QUEUE>
                                 </env>
                             </build>
                             <run>

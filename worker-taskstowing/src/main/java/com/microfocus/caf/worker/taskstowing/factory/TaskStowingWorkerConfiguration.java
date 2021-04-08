@@ -18,14 +18,27 @@
  */
 package com.microfocus.caf.worker.taskstowing.factory;
 
-import com.hpe.caf.api.Configuration;
+import com.hpe.caf.api.worker.WorkerConfiguration;
+import javax.validation.constraints.Max;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-@Configuration
-public final class TaskStowingWorkerConfiguration
+public final class TaskStowingWorkerConfiguration extends WorkerConfiguration
 {
+    @NotNull
+    @Size(min = 1)
+    private String outputQueue;
+
+    @NotNull
+    @Size(min = 1)
+    private String failureQueue;
+
+    @Min(1)
+    @Max(20)
+    private int threads;
+
     @NotNull
     private String databaseHost;
 
@@ -49,6 +62,36 @@ public final class TaskStowingWorkerConfiguration
 
     @Min(1)
     private int databaseMaximumPoolSize;
+
+    public String getOutputQueue()
+    {
+        return outputQueue;
+    }
+
+    public void setOutputQueue(final String outputQueue)
+    {
+        this.outputQueue = outputQueue;
+    }
+
+    public String getFailureQueue()
+    {
+        return failureQueue;
+    }
+
+    public void setFailureQueue(final String failureQueue)
+    {
+        this.failureQueue = failureQueue;
+    }
+
+    public int getThreads()
+    {
+        return threads;
+    }
+
+    public void setThreads(final int threads)
+    {
+        this.threads = threads;
+    }
 
     public String getDatabaseHost()
     {

@@ -18,10 +18,10 @@
  */
 package com.microfocus.caf.worker.taskstowing;
 
-import com.google.common.base.Strings;
 import java.util.List;
 import org.jdbi.v3.core.Jdbi;
 import org.testng.Assert;
+import static com.microfocus.caf.worker.taskstowing.IntegrationTestUtil.*;
 
 final class IntegrationTestDatabaseClient
 {
@@ -72,14 +72,5 @@ final class IntegrationTestDatabaseClient
         jdbi.useHandle(handle -> {
             handle.execute("DELETE FROM " + databaseTableName);
         });
-    }
-
-    private static String checkNotNullOrEmpty(final String systemPropertyKey)
-    {
-        final String systemProperty = System.getProperty(systemPropertyKey);
-        if (Strings.isNullOrEmpty(systemProperty)) {
-            throw new RuntimeException("System property should not be null or empty: " + systemPropertyKey);
-        }
-        return systemProperty;
     }
 }

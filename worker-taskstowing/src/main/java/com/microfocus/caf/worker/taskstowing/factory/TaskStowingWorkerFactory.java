@@ -25,18 +25,25 @@ import com.hpe.caf.api.HealthResult;
 import com.hpe.caf.api.HealthStatus;
 import com.hpe.caf.api.worker.DataStore;
 import com.hpe.caf.api.worker.InvalidTaskException;
+import com.hpe.caf.api.worker.JobStatus;
+import com.hpe.caf.api.worker.NotIndendedTaskMessageForwardingEvaluator;
+import com.hpe.caf.api.worker.TaskForwardingAction;
+import com.hpe.caf.api.worker.TaskInformation;
+import com.hpe.caf.api.worker.TaskMessage;
 import com.hpe.caf.api.worker.TaskRejectedException;
 import com.hpe.caf.api.worker.Worker;
+import com.hpe.caf.api.worker.WorkerCallback;
 import com.hpe.caf.api.worker.WorkerException;
 import com.hpe.caf.api.worker.WorkerFactory;
 import com.hpe.caf.api.worker.WorkerTaskData;
 import com.microfocus.caf.worker.taskstowing.TaskStowingWorker;
 import com.microfocus.caf.worker.taskstowing.database.DatabaseClient;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class TaskStowingWorkerFactory implements WorkerFactory
+public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndendedTaskMessageForwardingEvaluator
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerFactory.class);
 
@@ -84,6 +91,28 @@ public final class TaskStowingWorkerFactory implements WorkerFactory
             final String message = "Database is unhealthy.";
             LOGGER.error(message, exception);
             return new HealthResult(HealthStatus.UNHEALTHY, message);
+        }
+    }
+
+    @Override
+    public TaskForwardingAction determineForwardingAction(
+        final TaskMessage tm,
+        final TaskInformation taskInformation,
+        final boolean poison,
+        final Map<String, Object> headers,
+        final Codec codec,
+        final JobStatus jobStatus,
+        final WorkerCallback callback)
+    {
+        switch (jobStatus) {
+            case Active:
+            case Waiting:
+                return TaskForwardingAction.Forward;
+            case Paused:
+                return TaskForwardingAction.Execute;
+            default:
+                throw new RuntimeException(String.format(
+                    "This worker was asked to determine the forwarding action for a task with an unexpected job status: %s.", jobStatus));
         }
     }
 }

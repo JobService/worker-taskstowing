@@ -18,7 +18,6 @@
  */
 package com.microfocus.caf.worker.taskstowing;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.hpe.caf.api.worker.TaskMessage;
@@ -34,28 +33,73 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.microfocus.caf.worker.taskstowing.IntegrationTestUtil.*;
+import static com.fasterxml.jackson.databind.DeserializationFeature.*;
+import java.time.LocalDate;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.BeforeClass;
 
 public class TaskStowingWorkerIT
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerIT.class);
-    private static final ObjectMapper OBJECT_MAPPER
-        = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final String DOCKER_HOST_ADDRESS = checkNotNullOrEmpty("docker.host.address");
+    private static final String MOCK_SERVER_PORT = checkNotNullOrEmpty("mockserver.port");
+    private static final String STATUS_CHECK_URL = String.format("http://%s:%s/partitions/tenant-acme/jobs/job1/status",
+                                                                 DOCKER_HOST_ADDRESS, MOCK_SERVER_PORT);
+    private static final Date ONE_DAY_AGO = java.sql.Date.valueOf(LocalDate.now().minusDays(1));
+    private static final long TWO_MINUTES = 120000L;
+
     private final IntegrationTestDatabaseClient integrationTestDatabaseClient = new IntegrationTestDatabaseClient();
     private QueueServices queueServices;
+
+    @BeforeClass
+    public static void setUpClass() throws IOException, InterruptedException
+    {
+        mockStatusCheckUrlResponse();
+    }
+
+    private static void mockStatusCheckUrlResponse() throws IOException, InterruptedException
+    {
+        final String statusCheckUrlExpectationUrl = String.format("http://%s:%s/expectation", DOCKER_HOST_ADDRESS, MOCK_SERVER_PORT);
+        final String statusCheckUrlExpectationJson = loadStatusCheckUrlExpectationJson();
+        final RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), statusCheckUrlExpectationJson);
+        final Request request = new Request.Builder().url(statusCheckUrlExpectationUrl).put(body).build();
+        try (final Response response = new OkHttpClient().newCall(request).execute()) {
+            if (response.code() != 201) {
+                throw new RuntimeException(
+                    "Unexpected response code returned from mock server PUT request. Expected 201 but got " + response.code());
+            }
+        }
+    }
+
+    private static String loadStatusCheckUrlExpectationJson() throws IOException, InterruptedException
+    {
+        try (final InputStream inputStream = TaskStowingWorkerIT.class.getResourceAsStream("/status-check-url-expectation.json")) {
+            return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+        }
+    }
 
     @BeforeMethod
     public void setUpTest(Method method) throws Exception
@@ -78,9 +122,9 @@ public class TaskStowingWorkerIT
         // Given a task message
         final TrackingInfo trackingInfo = new TrackingInfo(
             "tenant-acme:job1",
-            new Date(),
-            30000L,
-            "dummyurl",
+            ONE_DAY_AGO,
+            TWO_MINUTES,
+            STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -94,7 +138,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "worker-taskstowing-in", // TODO Change this when fixed
+            "dataprocessing-elasticquery-in",
             trackingInfo,
             new TaskSourceInfo("agent1", "1.0"),
             "123");
@@ -113,7 +157,7 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for task_classifier", "DocumentWorkerTask", stowedTaskRow.getTaskClassifier());
         assertEquals("Unexpected value in database for task_api_version", 2, stowedTaskRow.getTaskApiVersion());
         assertEquals("Unexpected value in database for task_status", "NEW_TASK", stowedTaskRow.getTaskStatus());
-        assertEquals("Unexpected value in database for to", "worker-taskstowing-in", stowedTaskRow.getTo());
+        assertEquals("Unexpected value in database for to", "dataprocessing-elasticquery-in", stowedTaskRow.getTo());
         assertEquals("Unexpected value in database for correlation_id", "123", stowedTaskRow.getCorrelationId());
 
         // task_data
@@ -137,9 +181,9 @@ public class TaskStowingWorkerIT
         assertNotNull("tracking_info.lastStatusCheckTime value in database should not be null",
                       trackingInfoFromDatabase.getLastStatusCheckTime());
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
-                     30000L, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
+                     TWO_MINUTES, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     "dummyurl", trackingInfoFromDatabase.getStatusCheckUrl());
+                     STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
                      "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
         assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
@@ -159,9 +203,9 @@ public class TaskStowingWorkerIT
         // Given a task message
         final TrackingInfo trackingInfo = new TrackingInfo(
             "tenant-acme:job1",
-            new Date(),
-            30000L,
-            "dummyurl",
+            ONE_DAY_AGO,
+            TWO_MINUTES,
+            STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -175,7 +219,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(taskData),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "worker-taskstowing-in", // TODO Change this when fixed
+            "dataprocessing-elasticquery-in",
             trackingInfo,
             new TaskSourceInfo("agent1", "1.0"),
             "123");
@@ -194,7 +238,7 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for task_classifier", "DocumentWorkerTask", stowedTaskRow.getTaskClassifier());
         assertEquals("Unexpected value in database for task_api_version", 2, stowedTaskRow.getTaskApiVersion());
         assertEquals("Unexpected value in database for task_status", "NEW_TASK", stowedTaskRow.getTaskStatus());
-        assertEquals("Unexpected value in database for to", "worker-taskstowing-in", stowedTaskRow.getTo());
+        assertEquals("Unexpected value in database for to", "dataprocessing-elasticquery-in", stowedTaskRow.getTo());
         assertEquals("Unexpected value in database for correlation_id", "123", stowedTaskRow.getCorrelationId());
 
         // task_data
@@ -218,9 +262,9 @@ public class TaskStowingWorkerIT
         assertNotNull("tracking_info.lastStatusCheckTime value in database should not be null",
                       trackingInfoFromDatabase.getLastStatusCheckTime());
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
-                     30000L, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
+                     TWO_MINUTES, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     "dummyurl", trackingInfoFromDatabase.getStatusCheckUrl());
+                     STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
                      "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
         assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
@@ -235,47 +279,14 @@ public class TaskStowingWorkerIT
     }
 
     @Test
-    public void testTaskWithoutTrackingInfoIsNotStowed() throws IOException, InterruptedException, Exception
-    {
-        // Given a task message with no tracking info
-        final DocumentWorkerDocumentTask documentWorkerDocumentTask = new DocumentWorkerDocumentTask();
-        documentWorkerDocumentTask.document = createSampleDocument();
-
-        final TaskMessage taskMessage = new TaskMessage(
-            UUID.randomUUID().toString(),
-            "DocumentWorkerTask",
-            2,
-            OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
-            TaskStatus.NEW_TASK,
-            Collections.<String, byte[]>emptyMap(),
-            "worker-taskstowing-in", // TODO Change this when fixed
-            null, // No tracking info
-            null,
-            null);
-
-        // When the task message is sent to the worker
-        queueServices.startListening();
-        queueServices.sendTaskMessage(taskMessage);
-
-        // Then the worker should have sent the message to it's output queue
-        queueServices.waitForOutputQueueMessages(1, 30000);
-        assertEquals("Expected 1 message to have been sent to the worker's output queue", 1,
-                     queueServices.getOutputQueueMessages().size());
-
-        // and the worker should NOT have stowed the task message in the database
-        final List<StowedTaskRow> stowedTaskRows = integrationTestDatabaseClient.getStowedTasks();
-        assertEquals("Expected 0 rows to have been written to the database", 0, stowedTaskRows.size());
-    }
-
-    @Test
     public void testTaskWithoutJobTaskIdIsNotStowed() throws IOException, InterruptedException, Exception
     {
         // Given a task message without a job task ID
         final TrackingInfo trackingInfo = new TrackingInfo(
             "",
-            new Date(),
-            30000L,
-            "dummyurl",
+            ONE_DAY_AGO,
+            TWO_MINUTES,
+            STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -289,7 +300,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "worker-taskstowing-in", // TODO Change this when fixed
+            "<dataprocessing-elasticquery-in",
             trackingInfo,
             null,
             null);
@@ -314,9 +325,9 @@ public class TaskStowingWorkerIT
         // Given a task message with an invalid job task ID
         final TrackingInfo trackingInfo = new TrackingInfo(
             ":", // Invalid as the worker is unable to parse a partition ID from this
-            new Date(),
-            30000L,
-            "dummyurl",
+            ONE_DAY_AGO,
+            TWO_MINUTES,
+            STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -330,7 +341,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "worker-taskstowing-in", // TODO Change this when fixed
+            "dataprocessing-elasticquery-in",
             trackingInfo,
             null,
             null);
@@ -355,9 +366,9 @@ public class TaskStowingWorkerIT
         // Given a task message with an invalid job task ID
         final TrackingInfo trackingInfo = new TrackingInfo(
             ".abc.", // Invalid as the worker is unable to parse a job ID from this
-            new Date(),
-            30000L,
-            "dummyurl",
+            ONE_DAY_AGO,
+            TWO_MINUTES,
+            STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -371,7 +382,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "worker-taskstowing-in", // TODO Change this when fixed
+            "dataprocessing-elasticquery-in",
             trackingInfo,
             null,
             null);

@@ -70,6 +70,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpasyncclient</artifactId>
             <scope>test</scope>
@@ -189,6 +194,7 @@
                         <worker.adminport>${worker.adminport}</worker.adminport>
                         <rabbitmq.node.port>${rabbitmq.node.port}</rabbitmq.node.port>
                         <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
+                        <mockserver.port>${mockserver.port}</mockserver.port>
                         <datastore.enabled>false</datastore.enabled>
                         <database.port>${database.port}</database.port>
                         <database.name>${database.name}</database.name>
@@ -313,7 +319,7 @@
                             </run>
                         </image>
 
-                        <!-- Run the Postgres image -->
+                        <!-- Run the Postgres image --> 
                         <image>
                             <alias>postgres</alias>
                             <name>${targetDockerRegistryPath}/worker-taskstowing-postgres:${project.version}</name>
@@ -350,6 +356,17 @@
                             </run>
                         </image>
 
+                        <!-- Run a mock server to return a "Paused" status when the worker invokes the statusCheckUrl during tests. -->
+                        <image>
+                            <alias>mockserver</alias>
+                            <name>${dockerHubPublic}/jamesdbloom/mockserver</name>
+                            <run>
+                                <ports>
+                                    <port>${mockserver.port}:1080</port>
+                                </ports>
+                            </run>
+                        </image>
+
                         <!-- Run the Task Stowing Worker image -->
                         <image>
                             <alias>worker-taskstowing</alias>
@@ -368,7 +385,7 @@
                                     <mode>tar</mode>
                                     <basedir>/</basedir>
                                     <inline>
-                                        <!-- Including the executable worker.sh and worker.yaml files in the docker tar -->
+                                         <!-- Including the executable worker.sh and worker.yaml files in the docker tar -->
                                         <fileSets>
                                             <fileSet>
                                                 <outputDirectory>maven</outputDirectory>
@@ -437,10 +454,12 @@
                                 </volumes>
                                 <dependsOn>
                                     <container>postgres</container>
+                                    <container>mockserver</container>
                                 </dependsOn>
                                 <links>
                                     <link>rabbitmq</link>
                                     <link>postgres</link>
+                                    <link>mockserver</link>
                                 </links>
                                 <log>
                                     <enabled>true</enabled>
@@ -470,6 +489,8 @@
                 <worker.adminport>8081</worker.adminport>
                 <webdav.apache.port>9090</webdav.apache.port>
                 <database.port>25432</database.port>
+                <database.port>25432</database.port>
+                <mockserver.port>1080</mockserver.port>
             </properties>
         </profile>
     </profiles>

@@ -1,0 +1,12 @@
+{
+  "httpRequest": {
+    "method": "GET",
+    "path": "/partitions/tenant-acme/jobs/job1/status",
+    "queryStringParameters": [
+    ]
+  },
+  "httpResponse": {
+    "statusCode": 200,
+    "body": "Paused"
+  }
+}

@@ -104,15 +104,8 @@ public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndende
         final JobStatus jobStatus,
         final WorkerCallback callback)
     {
-        switch (jobStatus) {
-            case Active:
-            case Waiting:
-                return TaskForwardingAction.Forward;
-            case Paused:
-                return TaskForwardingAction.Execute;
-            default:
-                throw new RuntimeException(String.format(
-                    "This worker was asked to determine the forwarding action for a task with an unexpected job status: %s.", jobStatus));
-        }
+        return jobStatus == JobStatus.Paused
+            ? TaskForwardingAction.Execute
+            : TaskForwardingAction.Forward;
     }
 }

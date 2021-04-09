@@ -194,7 +194,7 @@
                         <worker.adminport>${worker.adminport}</worker.adminport>
                         <rabbitmq.node.port>${rabbitmq.node.port}</rabbitmq.node.port>
                         <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
-                        <mockserver.port>${mockserver.port}</mockserver.port>
+                        <mock.job.service.port>${mock.job.service.port}</mock.job.service.port>
                         <datastore.enabled>false</datastore.enabled>
                         <database.port>${database.port}</database.port>
                         <database.name>${database.name}</database.name>
@@ -356,13 +356,13 @@
                             </run>
                         </image>
 
-                        <!-- Run a mock server to return a "Paused" status when the worker invokes the statusCheckUrl during tests. -->
+                        <!-- Run a mock job service to return a "Paused" status when the worker calls the statusCheckUrl during tests. -->
                         <image>
-                            <alias>mockserver</alias>
+                            <alias>mock.job.service</alias>
                             <name>${dockerHubPublic}/jamesdbloom/mockserver</name>
                             <run>
                                 <ports>
-                                    <port>${mockserver.port}:1080</port>
+                                    <port>${mock.job.service.port}:1080</port>
                                 </ports>
                             </run>
                         </image>
@@ -385,7 +385,7 @@
                                     <mode>tar</mode>
                                     <basedir>/</basedir>
                                     <inline>
-                                         <!-- Including the executable worker.sh and worker.yaml files in the docker tar -->
+                                        <!-- Including the executable worker.sh and worker.yaml files in the docker tar -->
                                         <fileSets>
                                             <fileSet>
                                                 <outputDirectory>maven</outputDirectory>
@@ -454,12 +454,12 @@
                                 </volumes>
                                 <dependsOn>
                                     <container>postgres</container>
-                                    <container>mockserver</container>
+                                    <container>mock.job.service</container>
                                 </dependsOn>
                                 <links>
                                     <link>rabbitmq</link>
                                     <link>postgres</link>
-                                    <link>mockserver</link>
+                                    <link>mock.job.service</link>
                                 </links>
                                 <log>
                                     <enabled>true</enabled>
@@ -490,7 +490,7 @@
                 <webdav.apache.port>9090</webdav.apache.port>
                 <database.port>25432</database.port>
                 <database.port>25432</database.port>
-                <mockserver.port>1080</mockserver.port>
+                <mock.job.service.port>1080</mock.job.service.port>
             </properties>
         </profile>
     </profiles>

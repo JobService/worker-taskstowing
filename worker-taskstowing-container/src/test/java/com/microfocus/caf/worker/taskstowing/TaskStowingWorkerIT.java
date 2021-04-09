@@ -65,11 +65,11 @@ public class TaskStowingWorkerIT
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerIT.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final String DOCKER_HOST_ADDRESS = checkNotNullOrEmpty("docker.host.address");
-    private static final String MOCK_SERVER_PORT = checkNotNullOrEmpty("mockserver.port");
-    private static final String STATUS_CHECK_URL = String.format("http://%s:%s/partitions/tenant-acme/jobs/job1/status",
-                                                                 DOCKER_HOST_ADDRESS, MOCK_SERVER_PORT);
+    private static final String MOCK_JOB_SERVICE_PORT = checkNotNullOrEmpty("mock.job.service.port");
+    private static final String MOCK_JOB_SERVICE_STATUS_CHECK_URL = String.format("http://%s:%s/partitions/tenant-acme/jobs/job1/status",
+                                                                                  DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT);
     private static final Date ONE_DAY_AGO = java.sql.Date.valueOf(LocalDate.now().minusDays(1));
-    private static final long TWO_MINUTES = 120000L;
+    private static final long TWO_MINUTES_IN_MILLIS = 120000L;
 
     private final IntegrationTestDatabaseClient integrationTestDatabaseClient = new IntegrationTestDatabaseClient();
     private QueueServices queueServices;
@@ -77,12 +77,13 @@ public class TaskStowingWorkerIT
     @BeforeClass
     public static void setUpClass() throws IOException, InterruptedException
     {
+        // Instruct the mock job service to return a "Paused" status whenever the worker calls the statusCheckUrl during tests.
         mockStatusCheckUrlResponse();
     }
 
     private static void mockStatusCheckUrlResponse() throws IOException, InterruptedException
     {
-        final String statusCheckUrlExpectationUrl = String.format("http://%s:%s/expectation", DOCKER_HOST_ADDRESS, MOCK_SERVER_PORT);
+        final String statusCheckUrlExpectationUrl = String.format("http://%s:%s/expectation", DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT);
         final String statusCheckUrlExpectationJson = loadStatusCheckUrlExpectationJson();
         final RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), statusCheckUrlExpectationJson);
         final Request request = new Request.Builder().url(statusCheckUrlExpectationUrl).put(body).build();
@@ -123,8 +124,8 @@ public class TaskStowingWorkerIT
         final TrackingInfo trackingInfo = new TrackingInfo(
             "tenant-acme:job1",
             ONE_DAY_AGO,
-            TWO_MINUTES,
-            STATUS_CHECK_URL,
+            TWO_MINUTES_IN_MILLIS,
+            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -181,9 +182,9 @@ public class TaskStowingWorkerIT
         assertNotNull("tracking_info.lastStatusCheckTime value in database should not be null",
                       trackingInfoFromDatabase.getLastStatusCheckTime());
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
-                     TWO_MINUTES, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
+                     TWO_MINUTES_IN_MILLIS, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
+                     MOCK_JOB_SERVICE_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
                      "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
         assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
@@ -204,8 +205,8 @@ public class TaskStowingWorkerIT
         final TrackingInfo trackingInfo = new TrackingInfo(
             "tenant-acme:job1",
             ONE_DAY_AGO,
-            TWO_MINUTES,
-            STATUS_CHECK_URL,
+            TWO_MINUTES_IN_MILLIS,
+            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -262,9 +263,9 @@ public class TaskStowingWorkerIT
         assertNotNull("tracking_info.lastStatusCheckTime value in database should not be null",
                       trackingInfoFromDatabase.getLastStatusCheckTime());
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
-                     TWO_MINUTES, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
+                     TWO_MINUTES_IN_MILLIS, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
+                     MOCK_JOB_SERVICE_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
                      "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
         assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
@@ -285,8 +286,8 @@ public class TaskStowingWorkerIT
         final TrackingInfo trackingInfo = new TrackingInfo(
             "",
             ONE_DAY_AGO,
-            TWO_MINUTES,
-            STATUS_CHECK_URL,
+            TWO_MINUTES_IN_MILLIS,
+            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -326,8 +327,8 @@ public class TaskStowingWorkerIT
         final TrackingInfo trackingInfo = new TrackingInfo(
             ":", // Invalid as the worker is unable to parse a partition ID from this
             ONE_DAY_AGO,
-            TWO_MINUTES,
-            STATUS_CHECK_URL,
+            TWO_MINUTES_IN_MILLIS,
+            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -367,8 +368,8 @@ public class TaskStowingWorkerIT
         final TrackingInfo trackingInfo = new TrackingInfo(
             ".abc.", // Invalid as the worker is unable to parse a job ID from this
             ONE_DAY_AGO,
-            TWO_MINUTES,
-            STATUS_CHECK_URL,
+            TWO_MINUTES_IN_MILLIS,
+            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 

@@ -21,24 +21,16 @@ package com.microfocus.caf.worker.taskstowing;
 import java.util.List;
 import org.jdbi.v3.core.Jdbi;
 import org.testng.Assert;
-import static com.microfocus.caf.worker.taskstowing.IntegrationTestUtil.*;
+import static com.microfocus.caf.worker.taskstowing.IntegrationTestSystemProperties.*;
 
 final class IntegrationTestDatabaseClient
 {
     private final Jdbi jdbi;
-    private final String databaseTableName;
 
     public IntegrationTestDatabaseClient()
     {
-        final String dockerHostAddress = checkNotNullOrEmpty("docker.host.address");
-        final String databasePort = checkNotNullOrEmpty("database.port");
-        final String databaseName = checkNotNullOrEmpty("database.name");
-        final String databaseUsername = checkNotNullOrEmpty("database.username");
-        final String databasePassword = checkNotNullOrEmpty("database.password");
-        this.databaseTableName = checkNotNullOrEmpty("database.tablename");
-
-        final String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s", dockerHostAddress, databasePort, databaseName);
-        this.jdbi = Jdbi.create(jdbcUrl, databaseUsername, databasePassword);
+        final String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s", DOCKER_HOST_ADDRESS, DATABASE_PORT, DATABASE_NAME);
+        this.jdbi = Jdbi.create(jdbcUrl, DATABASE_USERANME, DATABASE_PASSWORD);
     }
 
     public List<StowedTaskRow> waitUntilStowedTaskTableContains(final int expectedNumberOfStowedTasks, final int timeoutMillis)
@@ -50,7 +42,7 @@ final class IntegrationTestDatabaseClient
             Thread.sleep(500);
             long remaining = deadline - System.currentTimeMillis();
             if (remaining < 0) {
-                Assert.fail("Timed out out after " + timeoutMillis + " milliseconds waiting on " + databaseTableName + " to contain "
+                Assert.fail("Timed out out after " + timeoutMillis + " milliseconds waiting on " + DATABASE_TABLE_NAME + " to contain "
                     + expectedNumberOfStowedTasks + " stowed tasks");
             }
             stowedTasks = getStowedTasks();
@@ -61,7 +53,7 @@ final class IntegrationTestDatabaseClient
     public List<StowedTaskRow> getStowedTasks() throws Exception
     {
         return jdbi.withHandle(handle -> {
-            return handle.createQuery("SELECT * FROM " + databaseTableName)
+            return handle.createQuery("SELECT * FROM " + DATABASE_TABLE_NAME)
                 .map(new StowedTaskRowMapper())
                 .list();
         });
@@ -70,7 +62,7 @@ final class IntegrationTestDatabaseClient
     public void deleteStowedTasks() throws Exception
     {
         jdbi.useHandle(handle -> {
-            handle.execute("DELETE FROM " + databaseTableName);
+            handle.execute("DELETE FROM " + DATABASE_TABLE_NAME);
         });
     }
 }

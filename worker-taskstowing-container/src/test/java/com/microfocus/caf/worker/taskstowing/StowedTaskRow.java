@@ -18,7 +18,7 @@
  */
 package com.microfocus.caf.worker.taskstowing;
 
-public final class StowedTaskRow
+final class StowedTaskRow
 {
     private final Long id;
     private final String partitionId;

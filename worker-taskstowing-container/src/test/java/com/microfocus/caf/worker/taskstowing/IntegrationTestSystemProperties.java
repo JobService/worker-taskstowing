@@ -20,14 +20,28 @@ package com.microfocus.caf.worker.taskstowing;
 
 import com.google.common.base.Strings;
 
-final class IntegrationTestUtil
+final class IntegrationTestSystemProperties
 {
-    public static String checkNotNullOrEmpty(final String systemPropertyKey)
+    public final static String DOCKER_HOST_ADDRESS = checkNotNullOrEmpty("docker.host.address");
+    public final static String DATABASE_PORT = checkNotNullOrEmpty("database.port");
+    public final static String DATABASE_NAME = checkNotNullOrEmpty("database.name");
+    public final static String DATABASE_USERANME = checkNotNullOrEmpty("database.username");
+    public final static String DATABASE_PASSWORD = checkNotNullOrEmpty("database.password");
+    public final static String DATABASE_TABLE_NAME  = checkNotNullOrEmpty("database.tablename");
+    public static final String MOCK_JOB_SERVICE_PORT = checkNotNullOrEmpty("mock.job.service.port");
+    public static final String RABBITMQ_NODE_PORT = checkNotNullOrEmpty("rabbitmq.node.port");
+    public static final String RABBITMQ_CTRL_PORT = checkNotNullOrEmpty("rabbitmq.ctrl.port");
+
+    private static String checkNotNullOrEmpty(final String systemPropertyKey)
     {
         final String systemProperty = System.getProperty(systemPropertyKey);
         if (Strings.isNullOrEmpty(systemProperty)) {
             throw new RuntimeException("System property should not be null or empty: " + systemPropertyKey);
         }
         return systemProperty;
+    }
+
+    private IntegrationTestSystemProperties()
+    {
     }
 }

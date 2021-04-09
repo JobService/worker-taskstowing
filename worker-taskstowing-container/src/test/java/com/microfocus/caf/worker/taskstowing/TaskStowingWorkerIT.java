@@ -51,7 +51,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.microfocus.caf.worker.taskstowing.IntegrationTestUtil.*;
+import static com.microfocus.caf.worker.taskstowing.IntegrationTestSystemProperties.*;
 import static com.fasterxml.jackson.databind.DeserializationFeature.*;
 import java.time.LocalDate;
 import static org.testng.AssertJUnit.assertEquals;
@@ -64,8 +64,6 @@ public class TaskStowingWorkerIT
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerIT.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private static final String DOCKER_HOST_ADDRESS = checkNotNullOrEmpty("docker.host.address");
-    private static final String MOCK_JOB_SERVICE_PORT = checkNotNullOrEmpty("mock.job.service.port");
     private static final String MOCK_JOB_SERVICE_STATUS_CHECK_URL = String.format("http://%s:%s/partitions/tenant-acme/jobs/job1/status",
                                                                                   DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT);
     private static final Date ONE_DAY_AGO = java.sql.Date.valueOf(LocalDate.now().minusDays(1));
@@ -77,7 +75,7 @@ public class TaskStowingWorkerIT
     @BeforeClass
     public static void setUpClass() throws IOException, InterruptedException
     {
-        // Instruct the mock job service to return a "Paused" status whenever the worker calls the statusCheckUrl during tests.
+        // Instruct the mock job service to return a "Paused" status whenever the worker calls the statusCheckUrl.
         mockStatusCheckUrlResponse();
     }
 

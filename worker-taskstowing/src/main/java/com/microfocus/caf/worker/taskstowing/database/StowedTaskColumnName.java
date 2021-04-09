@@ -32,4 +32,8 @@ public final class StowedTaskColumnName
     public static final String TRACKING_INFO = "tracking_info";
     public static final String SOURCE_INFO = "source_info";
     public static final String CORRELATION_ID = "correlation_id";
+
+    private StowedTaskColumnName()
+    {
+    }
 }

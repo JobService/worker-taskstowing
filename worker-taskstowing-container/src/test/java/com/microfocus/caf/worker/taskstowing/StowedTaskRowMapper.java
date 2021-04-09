@@ -24,7 +24,7 @@ import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import static com.microfocus.caf.worker.taskstowing.database.StowedTaskColumnName.*;
 
-class StowedTaskRowMapper implements RowMapper<StowedTaskRow>
+final class StowedTaskRowMapper implements RowMapper<StowedTaskRow>
 {
     @Override
     public StowedTaskRow map(final ResultSet resultSet, final StatementContext statementContext) throws SQLException

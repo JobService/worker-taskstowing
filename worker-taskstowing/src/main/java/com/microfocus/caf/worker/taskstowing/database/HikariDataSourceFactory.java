@@ -28,10 +28,11 @@ final class HikariDataSourceFactory
         final HikariDataSource hikariDataSource = new HikariDataSource();
 
         final String jdbcUrl = String.format(
-            "jdbc:postgresql://%s:%s/%s",
+            "jdbc:postgresql://%s:%s/%s?ApplicationName=%s",
             configuration.getDatabaseHost(),
             configuration.getDatabasePort(),
-            configuration.getDatabaseName());
+            configuration.getDatabaseName(),
+            configuration.getDatabaseAppName());
         hikariDataSource.setJdbcUrl(jdbcUrl);
         hikariDataSource.setUsername(configuration.getDatabaseUsername());
         hikariDataSource.setPassword(configuration.getDatabasePassword());

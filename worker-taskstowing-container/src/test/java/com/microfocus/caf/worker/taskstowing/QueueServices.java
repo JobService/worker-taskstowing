@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
+import static com.microfocus.caf.worker.taskstowing.IntegrationTestSystemProperties.*;
 
 /**
  * This class is responsible sending task data to the target queue.
@@ -78,10 +79,9 @@ public final class QueueServices
 
     public QueueServices() throws IOException, TimeoutException
     {
-        String dockerHost = System.getProperty("docker.host.address");
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(dockerHost);
-        factory.setPort(Integer.parseInt(System.getProperty("rabbitmq.node.port")));
+        factory.setHost(DOCKER_HOST_ADDRESS);
+        factory.setPort(Integer.parseInt(RABBITMQ_NODE_PORT));
         factory.setUsername("guest");
         factory.setPassword("guest");
         LOGGER.info("Getting Rabbit MQ connection...");
@@ -106,7 +106,7 @@ public final class QueueServices
         LOGGER.info("Declare worker output queue...");
         outputChannel.queueDeclare(outputQueueName, true, false, false, null);
 
-        rabbitHost = new HttpHost(dockerHost, Integer.parseInt(System.getProperty("rabbitmq.ctrl.port")),
+        rabbitHost = new HttpHost(DOCKER_HOST_ADDRESS, Integer.parseInt(RABBITMQ_CTRL_PORT),
                                   "http");
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         credsProvider.setCredentials(AuthScope.ANY,

@@ -55,6 +55,7 @@
         <dependency>
             <groupId>com.github.workerframework</groupId>
             <artifactId>worker-api</artifactId>
+            <version>5.0.0-SCMOD-12730-3-SNAPSHOT</version> <!-- TODO Remove when https://github.com/WorkerFramework/worker-framework/pull/126 is merged -->
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

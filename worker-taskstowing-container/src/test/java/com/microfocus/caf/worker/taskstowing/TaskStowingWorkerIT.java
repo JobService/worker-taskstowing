@@ -33,26 +33,19 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.microfocus.caf.worker.taskstowing.IntegrationTestSystemProperties.*;
 import static com.fasterxml.jackson.databind.DeserializationFeature.*;
+import com.hpe.caf.api.worker.JobStatus;
 import java.time.LocalDate;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -64,8 +57,9 @@ public class TaskStowingWorkerIT
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerIT.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private static final String MOCK_JOB_SERVICE_STATUS_CHECK_URL = String.format("http://%s:%s/partitions/tenant-acme/jobs/job1/status",
-                                                                                  DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT);
+    private static final String PAUSED_JOB_STATUS_CHECK_URL_PATH = "/partitions/tenant-acme/jobs/job1/status";
+    private static final String PAUSED_JOB_STATUS_CHECK_URL =
+        String.format("http://%s:%s%s", DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT, PAUSED_JOB_STATUS_CHECK_URL_PATH);
     private static final Date ONE_DAY_AGO = java.sql.Date.valueOf(LocalDate.now().minusDays(1));
     private static final long TWO_MINUTES_IN_MILLIS = 120000L;
 
@@ -75,29 +69,8 @@ public class TaskStowingWorkerIT
     @BeforeClass
     public static void setUpClass() throws IOException, InterruptedException
     {
-        // Instruct the mock job service to return a "Paused" status whenever the worker calls the statusCheckUrl.
-        mockStatusCheckUrlResponse();
-    }
-
-    private static void mockStatusCheckUrlResponse() throws IOException, InterruptedException
-    {
-        final String statusCheckUrlExpectationUrl = String.format("http://%s:%s/expectation", DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT);
-        final String statusCheckUrlExpectationJson = loadStatusCheckUrlExpectationJson();
-        final RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), statusCheckUrlExpectationJson);
-        final Request request = new Request.Builder().url(statusCheckUrlExpectationUrl).put(body).build();
-        try (final Response response = new OkHttpClient().newCall(request).execute()) {
-            if (response.code() != 201) {
-                throw new RuntimeException(
-                    "Unexpected response code returned from mock server PUT request. Expected 201 but got " + response.code());
-            }
-        }
-    }
-
-    private static String loadStatusCheckUrlExpectationJson() throws IOException, InterruptedException
-    {
-        try (final InputStream inputStream = TaskStowingWorkerIT.class.getResourceAsStream("/status-check-url-expectation.json")) {
-            return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-        }
+        // Instruct the mock job service to return a "Paused" status whenever the worker calls the specified statusCheckUrl.
+        MockJobServiceExpectationSetter.addStatusCheckUrlExpectation(PAUSED_JOB_STATUS_CHECK_URL_PATH, JobStatus.Paused);
     }
 
     @BeforeMethod
@@ -123,7 +96,7 @@ public class TaskStowingWorkerIT
             "tenant-acme:job1",
             ONE_DAY_AGO,
             TWO_MINUTES_IN_MILLIS,
-            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
+            PAUSED_JOB_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -182,7 +155,7 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
                      TWO_MINUTES_IN_MILLIS, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     MOCK_JOB_SERVICE_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
+                     PAUSED_JOB_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
                      "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
         assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
@@ -204,7 +177,7 @@ public class TaskStowingWorkerIT
             "tenant-acme:job1",
             ONE_DAY_AGO,
             TWO_MINUTES_IN_MILLIS,
-            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
+            PAUSED_JOB_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -263,7 +236,7 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
                      TWO_MINUTES_IN_MILLIS, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     MOCK_JOB_SERVICE_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
+                     PAUSED_JOB_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
                      "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
         assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
@@ -285,7 +258,7 @@ public class TaskStowingWorkerIT
             "",
             ONE_DAY_AGO,
             TWO_MINUTES_IN_MILLIS,
-            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
+            PAUSED_JOB_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -326,7 +299,7 @@ public class TaskStowingWorkerIT
             ":", // Invalid as the worker is unable to parse a partition ID from this
             ONE_DAY_AGO,
             TWO_MINUTES_IN_MILLIS,
-            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
+            PAUSED_JOB_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 
@@ -367,7 +340,7 @@ public class TaskStowingWorkerIT
             ".abc.", // Invalid as the worker is unable to parse a job ID from this
             ONE_DAY_AGO,
             TWO_MINUTES_IN_MILLIS,
-            MOCK_JOB_SERVICE_STATUS_CHECK_URL,
+            PAUSED_JOB_STATUS_CHECK_URL,
             "dataprocessing-jobtracking-in",
             null);
 

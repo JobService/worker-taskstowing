@@ -70,6 +70,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <scope>test</scope>
@@ -359,7 +364,7 @@
                         <!-- Run a mock job service to return a "Paused" status when the worker calls the statusCheckUrl during tests. -->
                         <image>
                             <alias>mock.job.service</alias>
-                            <name>${dockerHubPublic}/jamesdbloom/mockserver</name>
+                            <name>${dockerHubPublic}/jamesdbloom/mockserver:mockserver-5.11.2</name>
                             <run>
                                 <ports>
                                     <port>${mock.job.service.port}:1080</port>

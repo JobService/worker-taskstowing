@@ -40,6 +40,12 @@ public final class TaskStowingWorkerConfiguration extends WorkerConfiguration
     private int threads;
 
     @NotNull
+    private long maxBatchTime;
+
+    @Min(1)
+    private int maxBatchSize;
+
+    @NotNull
     private String databaseHost;
 
     @Min(1)
@@ -91,6 +97,26 @@ public final class TaskStowingWorkerConfiguration extends WorkerConfiguration
     public void setThreads(final int threads)
     {
         this.threads = threads;
+    }
+
+    public long getMaxBatchTime()
+    {
+        return maxBatchTime;
+    }
+
+    public void setMaxBatchTime(final int maxBatchTime)
+    {
+        this.maxBatchTime = maxBatchTime;
+    }
+
+    public int getMaxBatchSize()
+    {
+        return maxBatchSize;
+    }
+
+    public void setMaxBatchSize(final int maxBatchSize)
+    {
+        this.maxBatchSize = maxBatchSize;
     }
 
     public String getDatabaseHost()

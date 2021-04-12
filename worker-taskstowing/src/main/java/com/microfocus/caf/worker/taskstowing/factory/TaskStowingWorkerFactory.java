@@ -23,6 +23,8 @@ import com.hpe.caf.api.ConfigurationException;
 import com.hpe.caf.api.ConfigurationSource;
 import com.hpe.caf.api.HealthResult;
 import com.hpe.caf.api.HealthStatus;
+import com.hpe.caf.api.worker.BulkWorker;
+import com.hpe.caf.api.worker.BulkWorkerRuntime;
 import com.hpe.caf.api.worker.DataStore;
 import com.hpe.caf.api.worker.InvalidTaskException;
 import com.hpe.caf.api.worker.JobStatus;
@@ -35,15 +37,19 @@ import com.hpe.caf.api.worker.Worker;
 import com.hpe.caf.api.worker.WorkerCallback;
 import com.hpe.caf.api.worker.WorkerException;
 import com.hpe.caf.api.worker.WorkerFactory;
+import com.hpe.caf.api.worker.WorkerTask;
 import com.hpe.caf.api.worker.WorkerTaskData;
+import com.microfocus.caf.worker.taskstowing.TaskStowingBulkWorker;
 import com.microfocus.caf.worker.taskstowing.TaskStowingWorker;
 import com.microfocus.caf.worker.taskstowing.database.DatabaseClient;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndendedTaskMessageForwardingEvaluator
+public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndendedTaskMessageForwardingEvaluator, BulkWorker
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerFactory.class);
 
@@ -107,5 +113,43 @@ public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndende
         return jobStatus == JobStatus.Paused
             ? TaskForwardingAction.Execute
             : TaskForwardingAction.Forward;
+    }
+
+    @Override
+    public void processTasks(final BulkWorkerRuntime bulkWorkerRuntime) throws InterruptedException
+    {
+        final long maxBatchTime = configuration.getMaxBatchTime();
+        final int maxBatchSize = configuration.getMaxBatchSize();
+        final long cutoffTime = System.currentTimeMillis() + maxBatchTime;
+        final List<WorkerTask> workerTasks = new ArrayList<>();
+
+        LOGGER.info("Starting to wait for tasks for bulk processing. Max batch size: {}. Max batch time: {}. Cut-off time: {}",
+                    maxBatchSize, maxBatchTime, cutoffTime);
+        for (;;) {
+            final long maxWaitTime = cutoffTime - System.currentTimeMillis();
+            LOGGER.info("Waiting for next task for bulk processing. Max wait time: {}", maxWaitTime);
+            final WorkerTask workerTask = bulkWorkerRuntime.getNextWorkerTask(maxWaitTime);
+            if (workerTask == null) {
+                if (workerTasks.isEmpty()) {
+                    LOGGER.info("No tasks received after max wait time: {}", maxWaitTime);
+                } else {
+                    LOGGER.info("No more tasks received after max wait time: {}. Will now begin to process: {} tasks.",
+                                maxWaitTime, workerTasks.size());
+                }
+                break;
+            }
+            workerTasks.add(workerTask);
+            LOGGER.info("Received task. Added task to bulk processing batch. Size of batch is now: {}. Max batch size: {}",
+                        workerTasks.size(), maxBatchSize);
+            if (workerTasks.size() >= maxBatchSize) {
+                LOGGER.info("Current bulk processing batch size: {} is equal to or greater than the max batch size: {}. "
+                    + "Will now begin to process tasks.", workerTasks.size(), maxBatchSize);
+                break;
+            }
+        }
+
+        if (workerTasks.size() > 0) {
+            new TaskStowingBulkWorker(workerTasks, configuration.getOutputQueue(), codec, databaseClient).processTasks();
+        }
     }
 }

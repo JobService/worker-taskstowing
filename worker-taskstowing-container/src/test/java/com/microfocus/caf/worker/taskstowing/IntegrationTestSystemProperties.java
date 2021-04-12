@@ -28,7 +28,7 @@ final class IntegrationTestSystemProperties
     public final static String DATABASE_USERANME = checkNotNullOrEmpty("database.username");
     public final static String DATABASE_PASSWORD = checkNotNullOrEmpty("database.password");
     public final static String DATABASE_TABLE_NAME  = checkNotNullOrEmpty("database.tablename");
-    public static final String MOCK_JOB_SERVICE_PORT = checkNotNullOrEmpty("mock.job.service.port");
+    public static final String MOCK_SERVICE_PORT = checkNotNullOrEmpty("mock.service.port");
     public static final String RABBITMQ_NODE_PORT = checkNotNullOrEmpty("rabbitmq.node.port");
     public static final String RABBITMQ_CTRL_PORT = checkNotNullOrEmpty("rabbitmq.ctrl.port");
 

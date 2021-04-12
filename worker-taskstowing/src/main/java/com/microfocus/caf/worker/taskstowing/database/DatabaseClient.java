@@ -100,7 +100,7 @@ public final class DatabaseClient
 
             final int numOfRowsInserted = update.execute();
             if (numOfRowsInserted == 1) {
-                LOGGER.debug("Successfully stowed task for partition ID {} and job ID {}", partitionId, jobId);
+                LOGGER.info("Successfully stowed task for partition ID {} and job ID {}", partitionId, jobId);
             } else {
                 throw new UnexpectedNumberOfRowsInsertedException(
                     "Expected 1 row to be inserted into database, but was " + numOfRowsInserted);

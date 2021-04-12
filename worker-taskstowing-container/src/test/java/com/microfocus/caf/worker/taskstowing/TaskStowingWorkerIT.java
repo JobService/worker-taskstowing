@@ -59,7 +59,7 @@ public class TaskStowingWorkerIT
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final String PAUSED_JOB_STATUS_CHECK_URL_PATH = "/partitions/tenant-acme/jobs/job1/status";
     private static final String PAUSED_JOB_STATUS_CHECK_URL =
-        String.format("http://%s:%s%s", DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT, PAUSED_JOB_STATUS_CHECK_URL_PATH);
+        String.format("http://%s:%s%s", DOCKER_HOST_ADDRESS, MOCK_SERVICE_PORT, PAUSED_JOB_STATUS_CHECK_URL_PATH);
     private static final Date ONE_DAY_AGO = java.sql.Date.valueOf(LocalDate.now().minusDays(1));
     private static final long TWO_MINUTES_IN_MILLIS = 120000L;
 
@@ -69,8 +69,10 @@ public class TaskStowingWorkerIT
     @BeforeClass
     public static void setUpClass() throws IOException, InterruptedException
     {
-        // Instruct the mock job service to return a "Paused" status whenever the worker calls the specified statusCheckUrl.
-        MockJobServiceExpectationSetter.addStatusCheckUrlExpectation(PAUSED_JOB_STATUS_CHECK_URL_PATH, JobStatus.Paused);
+        // Instruct the mock service to return a "Paused" status whenever the worker calls the specified statusCheckUrl.
+        final MockServiceExpection mockServiceExpection =
+            new MockServiceExpection("GET", PAUSED_JOB_STATUS_CHECK_URL_PATH, 200, JobStatus.Paused.name());
+        MockServiceExpectationAdder.addExpectation(mockServiceExpection);
     }
 
     @BeforeMethod
@@ -88,7 +90,7 @@ public class TaskStowingWorkerIT
         LOGGER.info("End of: {}", method.getName());
     }
 
-    @Test
+    @Test // Test stowing a task from a DocumentWorker, as opposed to a Worker.
     public void testStowDocumentWorkerTask() throws IOException, InterruptedException, Exception
     {
         // Given a task message

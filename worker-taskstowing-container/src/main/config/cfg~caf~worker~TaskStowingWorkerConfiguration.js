@@ -24,6 +24,8 @@
     failureQueue: getenv("CAF_WORKER_FAILURE_QUEUE") ||
     (getenv("CAF_WORKER_BASE_QUEUE_NAME") || getenv("CAF_WORKER_NAME") || "worker") + "-err",
     threads: getenv("CAF_WORKER_THREADS") || 1,
+    maxBatchTime: getenv("CAF_WORKER_MAX_BATCH_TIME") || 180000,
+    maxBatchSize: getenv("CAF_WORKER_MAX_BATCH_SIZE") || 100,
     databaseHost: getenv("CAF_WORKER_TASKSTOWING_DATABASE_HOST") || "localhost",
     databasePort: getenv("CAF_WORKER_TASKSTOWING_DATABASE_PORT") || 5432,
     databaseName: getenv("CAF_WORKER_TASKSTOWING_DATABASE_NAME") || "jobservice",

@@ -18,12 +18,12 @@
  */
 package com.microfocus.caf.worker.taskstowing;
 
-final class MockJobServiceExpection
+final class MockServiceExpection
 {
-    public HttpRequest httpRequest;
-    public HttpResponse httpResponse;
+    public final HttpRequest httpRequest;
+    public final HttpResponse httpResponse;
 
-    public MockJobServiceExpection(final String method, final String path, final int statusCode, final String body)
+    public MockServiceExpection(final String method, final String path, final int statusCode, final String body)
     {
         this.httpRequest = new HttpRequest(method, path);
         this.httpResponse = new HttpResponse(statusCode, body);
@@ -31,25 +31,25 @@ final class MockJobServiceExpection
 
     private class HttpRequest
     {
+        public final String method;
+        public final String path;
+
         public HttpRequest(final String method, final String path)
         {
             this.method = method;
             this.path = path;
         }
-
-        public String method;
-        public String path;
     }
 
-    public class HttpResponse
+    private class HttpResponse
     {
+        public final int statusCode;
+        public final String body;
+
         public HttpResponse(final int statusCode, final String body)
         {
             this.statusCode = statusCode;
             this.body = body;
         }
-
-        public int statusCode;
-        public String body;
     }
 }

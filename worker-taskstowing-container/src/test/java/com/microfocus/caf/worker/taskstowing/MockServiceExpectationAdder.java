@@ -19,7 +19,6 @@
 package com.microfocus.caf.worker.taskstowing;
 
 import com.google.gson.Gson;
-import com.hpe.caf.api.worker.JobStatus;
 import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -28,29 +27,28 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import static com.microfocus.caf.worker.taskstowing.IntegrationTestSystemProperties.*;
 
-final class MockJobServiceExpectationSetter
+final class MockServiceExpectationAdder
 {
-    private static final String EXPECTATION_URL = String.format("http://%s:%s/expectation", DOCKER_HOST_ADDRESS, MOCK_JOB_SERVICE_PORT);
+    private static final String EXPECTATION_URL = String.format("http://%s:%s/expectation", DOCKER_HOST_ADDRESS, MOCK_SERVICE_PORT);
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final Gson GSON = new Gson();
 
-    public static void addStatusCheckUrlExpectation(final String statusCheckUrlPath, final JobStatus jobStatus)
+    public static void addExpectation(final MockServiceExpection mockServiceExpection)
         throws IOException, InterruptedException
     {
-        final MockJobServiceExpection mockJobServiceExpection =
-            new MockJobServiceExpection("GET", statusCheckUrlPath, 200, jobStatus.name());
-        final String statusCheckUrlExpectationJson = GSON.toJson(mockJobServiceExpection);
-        final RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), statusCheckUrlExpectationJson);
+        final String expectationJson = GSON.toJson(mockServiceExpection);
+        final RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), expectationJson);
         final Request request = new Request.Builder().url(EXPECTATION_URL).put(body).build();
         try (final Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
             if (response.code() != 201) {
                 throw new RuntimeException(
-                    "Unexpected response code returned from mock job service PUT request. Expected 201 but got " + response.code());
+                    "Unexpected response code returned from mock service PUT expectation request. "
+                    + "Expected 201 but got " + response.code());
             }
         }
     }
 
-    private MockJobServiceExpectationSetter()
+    private MockServiceExpectationAdder()
     {
     }
 }

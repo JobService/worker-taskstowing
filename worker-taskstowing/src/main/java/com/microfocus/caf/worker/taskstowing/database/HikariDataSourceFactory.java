@@ -40,4 +40,8 @@ final class HikariDataSourceFactory
 
         return hikariDataSource;
     }
+
+    private HikariDataSourceFactory()
+    {
+    }
 }

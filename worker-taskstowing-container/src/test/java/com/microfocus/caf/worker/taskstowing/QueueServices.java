@@ -70,9 +70,11 @@ public final class QueueServices
     private final Channel publisherChannel;
     private final Channel errorChannel;
     private final Channel outputChannel;
+    private final Channel forwardChannel;
     private final String targetQueueName;
     private final String errorQueueName;
     private final String outputQueueName;
+    private final String forwardQueueName;
 
     private final HttpHost rabbitHost;
     private final HttpClientContext httpContext;
@@ -91,13 +93,16 @@ public final class QueueServices
         this.publisherChannel.confirmSelect();
         this.errorChannel = connection.createChannel();
         this.outputChannel = connection.createChannel();
+        this.forwardChannel = connection.createChannel();
 
         this.targetQueueName = "worker-taskstowing-in";
         this.outputQueueName = "worker-taskstowing-out";
         this.errorQueueName = "worker-taskstowing-err";
+        this.forwardQueueName = "dataprocessing-elasticquery-in";
         
         QUEUE_MESSAGES.put(outputQueueName, new ArrayList<>());
         QUEUE_MESSAGES.put(errorQueueName, new ArrayList<>());
+        QUEUE_MESSAGES.put(forwardQueueName, new ArrayList<>());
 
         LOGGER.info("Declare target worker queue...");
         publisherChannel.queueDeclare(targetQueueName, true, false, false, null);
@@ -105,6 +110,8 @@ public final class QueueServices
         errorChannel.queueDeclare(errorQueueName, true, false, false, null);
         LOGGER.info("Declare worker output queue...");
         outputChannel.queueDeclare(outputQueueName, true, false, false, null);
+        LOGGER.info("Declare worker forward queue...");
+        forwardChannel.queueDeclare(forwardQueueName, true, false, false, null);
 
         rabbitHost = new HttpHost(DOCKER_HOST_ADDRESS, Integer.parseInt(RABBITMQ_CTRL_PORT),
                                   "http");
@@ -175,6 +182,11 @@ public final class QueueServices
         waitForMessages(msgCount, timeoutMs, errorQueueName);
     }
 
+    public void waitForForwardQueueMessages(int msgCount, int timeoutMs) throws InterruptedException
+    {
+        waitForMessages(msgCount, timeoutMs, forwardQueueName);
+    }
+
     public List<String> getOutputQueueMessages()
     {
         return QUEUE_MESSAGES.get(outputQueueName);
@@ -183,6 +195,11 @@ public final class QueueServices
     public List<String> getErrorQueueMessages()
     {
         return QUEUE_MESSAGES.get(errorQueueName);
+    }
+
+    public List<String> getForwardQueueMessages()
+    {
+        return QUEUE_MESSAGES.get(forwardQueueName);
     }
 
     public int getMessageCount(final String queueName)
@@ -220,6 +237,8 @@ public final class QueueServices
                     QUEUE_MESSAGES.get(errorQueueName).add(message);
                 } else if (queue.equalsIgnoreCase(outputQueueName)) {
                     QUEUE_MESSAGES.get(outputQueueName).add(message);
+                } else if (queue.equalsIgnoreCase(forwardQueueName)) {
+                    QUEUE_MESSAGES.get(forwardQueueName).add(message);
                 }
                 channel.basicAck(envelope.getDeliveryTag(), true);
             }
@@ -242,6 +261,10 @@ public final class QueueServices
 
             if (outputChannel != null) {
                 outputChannel.close();
+            }
+
+            if (forwardChannel != null) {
+                forwardChannel.close();
             }
 
             // Close connection.
@@ -267,6 +290,7 @@ public final class QueueServices
         try {
             getMessage(outputChannel, outputQueueName);
             getMessage(errorChannel, errorQueueName);
+            getMessage(forwardChannel, forwardQueueName);
         } catch (final IOException e) {
             e.printStackTrace();
         }

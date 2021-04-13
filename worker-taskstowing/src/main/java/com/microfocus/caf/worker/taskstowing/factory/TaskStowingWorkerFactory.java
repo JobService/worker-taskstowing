@@ -123,7 +123,7 @@ public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndende
         final long cutoffTime = System.currentTimeMillis() + maxBatchTime;
         final List<WorkerTask> workerTasks = new ArrayList<>();
 
-        LOGGER.info("Starting to wait for tasks for bulk processing. Max batch size: {}. Max batch time: {}. Cut-off time: {}",
+        LOGGER.info("Starting to collect tasks for bulk processing. Max batch size: {}. Max batch time: {}. Cut-off time: {}",
                     maxBatchSize, maxBatchTime, cutoffTime);
         for (;;) {
             final long maxWaitTime = cutoffTime - System.currentTimeMillis();
@@ -142,8 +142,8 @@ public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndende
             LOGGER.info("Received task. Added task to bulk processing batch. Size of batch is now: {}. Max batch size: {}",
                         workerTasks.size(), maxBatchSize);
             if (workerTasks.size() >= maxBatchSize) {
-                LOGGER.info("Current bulk processing batch size: {} is equal to or greater than the max batch size: {}. "
-                    + "Will now begin to process tasks.", workerTasks.size(), maxBatchSize);
+                LOGGER.info("Current bulk processing batch size: {} is equal to or greater than the max batch size: {}, "
+                    + "so will now begin to process tasks.", workerTasks.size(), maxBatchSize);
                 break;
             }
         }

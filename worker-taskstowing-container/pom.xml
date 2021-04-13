@@ -359,7 +359,7 @@
                             </run>
                         </image>
 
-                        <!-- Run a mock service to return a "Paused" status when the worker calls the statusCheckUrl during tests. -->
+                        <!-- Run a mock service to control what the statusCheckUrl returns during tests. -->
                         <image>
                             <alias>mock.service</alias>
                             <name>${dockerHubPublic}/jamesdbloom/mockserver:mockserver-5.11.2</name>

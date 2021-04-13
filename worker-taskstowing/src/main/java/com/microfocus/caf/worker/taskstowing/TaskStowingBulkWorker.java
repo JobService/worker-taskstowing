@@ -22,17 +22,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.hpe.caf.api.Codec;
-import com.hpe.caf.api.CodecException;
-import com.hpe.caf.api.worker.TaskFailedException;
-import com.hpe.caf.api.worker.TaskStatus;
 import com.hpe.caf.api.worker.TrackingInfo;
 import com.hpe.caf.api.worker.WorkerResponse;
 import com.hpe.caf.api.worker.WorkerTask;
 import com.hpe.caf.services.job.util.JobTaskId;
 import com.microfocus.caf.worker.taskstowing.database.DatabaseClient;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,139 +59,166 @@ public final class TaskStowingBulkWorker
 
     public void processTasks()
     {
-        // TODO batch these up into one SQL insert.
+        final List<WorkerTask> validatedWorkerTasks = new ArrayList<>();
+
+        final List<String> partitionIdList = new ArrayList<>();
+        final List<String> jobIdList = new ArrayList<>();
+        final List<String> taskClassifierList = new ArrayList<>();
+        final List<Integer> taskApiVersionList = new ArrayList<>();
+        final List<byte[]> taskDataList = new ArrayList<>();
+        final List<String> taskStatusList = new ArrayList<>();
+        final List<byte[]> contextList = new ArrayList<>();
+        final List<String> toList = new ArrayList<>();
+        final List<byte[]> trackingInfoList = new ArrayList<>();
+        final List<byte[]> sourceInfoList = new ArrayList<>();
+        final List<String> correlationIdList = new ArrayList<>();
+
         for (final WorkerTask workerTask : workerTasks) {
             final TrackingInfo trackingInfo = workerTask.getTrackingInfo();
             if (trackingInfo == null) {
+                LOGGER.error(TaskStowingWorkerFailure.TRACKING_INFO_NOT_PRESENT);
                 workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.TRACKING_INFO_NOT_PRESENT));
-                break;
+                continue;
             }
-
             final String jobTaskIdFromTrackingInfo = trackingInfo.getJobTaskId();
             if (Strings.isNullOrEmpty(jobTaskIdFromTrackingInfo)) {
+                LOGGER.error(TaskStowingWorkerFailure.JOB_TASK_ID_NOT_PRESENT);
                 workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.JOB_TASK_ID_NOT_PRESENT));
-                break;
+                continue;
             }
-
             final JobTaskId jobTaskId = JobTaskId.fromMessageId(jobTaskIdFromTrackingInfo);
-
             final String partitionId = jobTaskId.getPartitionId();
             if (Strings.isNullOrEmpty(partitionId)) {
+                LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_PARSE_PARTITION_ID_FROM_JOB_TASK_ID);
                 workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.FAILED_TO_PARSE_PARTITION_ID_FROM_JOB_TASK_ID));
-                break;
+                continue;
             }
-
             final String jobId = jobTaskId.getJobId();
             if (Strings.isNullOrEmpty(jobId)) {
+                LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_PARSE_JOB_ID_FROM_JOB_TASK_ID);
                 workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.FAILED_TO_PARSE_JOB_ID_FROM_JOB_TASK_ID));
-                break;
+                continue;
             }
 
             try {
-                databaseClient.stowTask(
-                    partitionId,
-                    jobId,
-                    workerTask.getClassifier(),
-                    workerTask.getVersion(),
-                    workerTask.getData(),
-                    workerTask.getStatus().name(),
-                    workerTask.getContext() != null ? workerTask.getContext()
-                    : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap()), // TODO check this: workerTaskData.getContext() always seems to be null, even when the task sent to the worker includes a non-null context?
-                    workerTask.getTo(),
-                    OBJECT_MAPPER.writeValueAsBytes(workerTask.getTrackingInfo()),
-                    OBJECT_MAPPER.writeValueAsBytes(workerTask.getSourceInfo()),
-                    workerTask.getCorrelationId());
-                workerTask.setResponse(createSuccessResultNoOutputToQueue());
-                break;
+                // TODO check this: workerTaskData.getContext() always seems to be null, even when the task sent to the worker includes a non-null context?
+                final byte[] contextBytes = workerTask.getContext() != null
+                    ? workerTask.getContext()
+                    : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap());
+                final byte[] trackingInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTask.getTrackingInfo());
+                final byte[] sourceInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTask.getSourceInfo());
+
+                partitionIdList.add(partitionId);
+                jobIdList.add(jobId);
+                taskClassifierList.add(workerTask.getClassifier());
+                taskApiVersionList.add(workerTask.getVersion());
+                taskDataList.add(workerTask.getData());
+                taskStatusList.add(workerTask.getStatus().name());
+                contextList.add(contextBytes);
+                toList.add(workerTask.getTo());
+                trackingInfoList.add(trackingInfoBytes);
+                sourceInfoList.add(sourceInfoBytes);
+                correlationIdList.add(workerTask.getCorrelationId());
+
+                validatedWorkerTasks.add(workerTask);
             } catch (final JsonProcessingException jsonProcessingException) {
+                LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_SERIALIZE_TASK, jsonProcessingException);
                 workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.FAILED_TO_SERIALIZE_TASK, jsonProcessingException));
-                break;
-            } catch (final Exception exception) {
-                workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception));
-                break;
             }
         }
-    }
 
-    public String getWorkerIdentifier()
-    {
-        return WORKER_IDENTIFIER;
-    }
+        try {
+            if (!validatedWorkerTasks.isEmpty()) {
+                if (anyListsEmptyOrNotSameSize(validatedWorkerTasks,
+                                               partitionIdList,
+                                               jobIdList,
+                                               taskClassifierList,
+                                               taskApiVersionList,
+                                               taskDataList,
+                                               taskStatusList,
+                                               contextList,
+                                               toList,
+                                               trackingInfoList,
+                                               sourceInfoList,
+                                               correlationIdList)) {
+                    // Should not happen normally, but want to make sure we don't go ahead with the database insertion if it does.
+                    LOGGER.error(TaskStowingWorkerFailure.UNKNOWN_ERROR);
+                    validatedWorkerTasks.forEach(workerTask -> {
+                        workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.UNKNOWN_ERROR));
+                    });
+                    return;
+                }
 
-    public int getWorkerApiVersion()
-    {
-        return WORKER_API_VERSION;
-    }
+                databaseClient.insertStowedTasks(
+                    partitionIdList,
+                    jobIdList,
+                    taskClassifierList,
+                    taskApiVersionList,
+                    taskDataList,
+                    taskStatusList,
+                    contextList,
+                    toList,
+                    trackingInfoList,
+                    sourceInfoList,
+                    correlationIdList);
 
-    public WorkerResponse getGeneralFailureResult(final Throwable t)
-    {
-        return new WorkerResponse(
-            outputQueue, TaskStatus.RESULT_EXCEPTION, getExceptionData(t), getWorkerIdentifier(), getWorkerApiVersion(), null);
+                validatedWorkerTasks.forEach(workerTask -> {
+                    workerTask.setResponse(createSuccessResultNoOutputToQueue());
+                });
+            }
+            // Else workerTasks is empty, which means there was an error in all the workerTasks received by this worker.
+            // There is nothing to do in this case as an error response will already have been set on each of the tasks before here.
+        } catch (final Exception exception) {
+            LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
+            validatedWorkerTasks.forEach(workerTask -> {
+                workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception));
+            });
+        }
     }
 
     private WorkerResponse createSuccessResultNoOutputToQueue()
     {
-        return new WorkerResponse(null, TaskStatus.RESULT_SUCCESS, new byte[]{}, getWorkerIdentifier(), getWorkerApiVersion(), null);
+        return WorkerResponseFactory.createSuccessResultNoOutputToQueue(WORKER_IDENTIFIER, WORKER_API_VERSION);
     }
 
     private WorkerResponse createFailureResult(final String failure)
     {
-        LOGGER.error(failure);
-        try {
-            byte[] data = codec.serialise(failure);
-            return new WorkerResponse(outputQueue, TaskStatus.RESULT_FAILURE, data, getWorkerIdentifier(), getWorkerApiVersion(), null);
-        } catch (final CodecException e) {
-            throw new TaskFailedException("Failed to serialise result", e);
-        }
+        return WorkerResponseFactory.createFailureResult(outputQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure);
     }
 
     private WorkerResponse createFailureResult(final String failure, final Throwable cause)
     {
-        LOGGER.error(failure, cause);
-        final byte[] exceptionData = getExceptionData(new Exception(failure, cause));
-        return new WorkerResponse(
-            outputQueue, TaskStatus.RESULT_FAILURE, exceptionData, getWorkerIdentifier(), getWorkerApiVersion(), null);
-
+        return WorkerResponseFactory.createFailureResult(outputQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure, cause);
     }
 
-    private byte[] getExceptionData(final Throwable t)
+    private static boolean anyListsEmptyOrNotSameSize(
+        final List<WorkerTask> validatedWorkerTasks,
+        final List<String> partitionIdList,
+        final List<String> jobIdList,
+        final List<String> taskClassifierList,
+        final List<Integer> taskApiVersionList,
+        final List<byte[]> taskDataList,
+        final List<String> taskStatusList,
+        final List<byte[]> contextList,
+        final List<String> toList,
+        final List<byte[]> trackingInfoList,
+        final List<byte[]> sourceInfoList,
+        final List<String> correlationIdList)
     {
-        try {
-            String exceptionDetail = buildExceptionStackTrace(t);
-            return codec.serialise(exceptionDetail);
-        } catch (CodecException e) {
-            LOGGER.warn("Failed to serialise exception, continuing", e);
-            return new byte[]{};
-        }
-    }
+        final List<List<? extends Object>> lists = new ArrayList<>();
+        lists.add(validatedWorkerTasks);
+        lists.add(partitionIdList);
+        lists.add(jobIdList);
+        lists.add(taskClassifierList);
+        lists.add(taskApiVersionList);
+        lists.add(taskDataList);
+        lists.add(taskStatusList);
+        lists.add(contextList);
+        lists.add(toList);
+        lists.add(trackingInfoList);
+        lists.add(sourceInfoList);
+        lists.add(correlationIdList);
 
-    private static String buildExceptionStackTrace(final Throwable e)
-    {
-        // Build up exception detail from stack trace
-        StringBuilder exceptionStackTrace = new StringBuilder(e.getClass() + " " + e.getMessage());
-        // Check if there is a stack trace on the exception before building it up into a string
-        if (Objects.nonNull(e.getStackTrace())) {
-            exceptionStackTrace.append(stackTraceToString(e.getStackTrace()));
-        }
-        // If a cause exists add it to the exception detail
-        if (Objects.nonNull(e.getCause())) {
-            exceptionStackTrace.
-                append(". Cause: ").append(e.getCause().getClass().toString()).append(" ").append(e.getCause().getMessage());
-            // Check if the cause has a stack trace before building it up into a string
-            if (Objects.nonNull(e.getCause().getStackTrace())) {
-                exceptionStackTrace.append(stackTraceToString(e.getCause().getStackTrace()));
-            }
-        }
-        return exceptionStackTrace.toString();
-    }
-
-    private static String stackTraceToString(final StackTraceElement[] stackTraceElements)
-    {
-        StringBuilder stackTraceStr = new StringBuilder();
-        // From each stack trace element, build up the stack trace
-        for (StackTraceElement stackTraceElement : stackTraceElements) {
-            stackTraceStr.append(" ").append(stackTraceElement.toString());
-        }
-        return stackTraceStr.toString();
+        return !lists.stream().allMatch(list -> !list.isEmpty() && (list.size() == lists.get(0).size()));
     }
 }

@@ -43,7 +43,7 @@ final class IntegrationTestDatabaseClient
             long remaining = deadline - System.currentTimeMillis();
             if (remaining < 0) {
                 Assert.fail("Timed out out after " + timeoutMillis + " milliseconds waiting on " + DATABASE_TABLE_NAME + " to contain "
-                    + expectedNumberOfStowedTasks + " stowed tasks");
+                    + expectedNumberOfStowedTasks + " stowed tasks. Actual number of stowed tasks is: " + stowedTasks.size());
             }
             stowedTasks = getStowedTasks();
         }

@@ -31,7 +31,9 @@ final class TaskStowingWorkerFailure
     static final String FAILED_TO_SERIALIZE_TASK
         = "Unable to stow task. Failed to serialize task.";
     static final String FAILED_TO_WRITE_TO_DATABASE
-        = "Unable to stow task. Failed to write to database.";
+        = "Unable to stow task(s). Failed to write to database.";
+    static final String UNKNOWN_ERROR
+        = "Unable to stow task(s). An unknown error occured when processing one or more task(s).";
 
     private TaskStowingWorkerFailure()
     {

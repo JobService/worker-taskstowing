@@ -22,9 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.hpe.caf.api.Codec;
-import com.hpe.caf.api.CodecException;
 import com.hpe.caf.api.worker.InvalidTaskException;
-import com.hpe.caf.api.worker.TaskFailedException;
 import com.hpe.caf.api.worker.TaskRejectedException;
 import com.hpe.caf.api.worker.TaskStatus;
 import com.hpe.caf.api.worker.TrackingInfo;
@@ -34,7 +32,6 @@ import com.hpe.caf.api.worker.WorkerTaskData;
 import com.hpe.caf.services.job.util.JobTaskId;
 import com.microfocus.caf.worker.taskstowing.database.DatabaseClient;
 import java.util.Collections;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,28 +64,28 @@ public final class TaskStowingWorker implements Worker
     {
         final TrackingInfo trackingInfo = workerTaskData.getTrackingInfo();
         if (trackingInfo == null) {
+            LOGGER.error(TaskStowingWorkerFailure.TRACKING_INFO_NOT_PRESENT);
             return createFailureResult(TaskStowingWorkerFailure.TRACKING_INFO_NOT_PRESENT);
         }
-
         final String jobTaskIdFromTrackingInfo = trackingInfo.getJobTaskId();
         if (Strings.isNullOrEmpty(jobTaskIdFromTrackingInfo)) {
+            LOGGER.error(TaskStowingWorkerFailure.JOB_TASK_ID_NOT_PRESENT);
             return createFailureResult(TaskStowingWorkerFailure.JOB_TASK_ID_NOT_PRESENT);
         }
-
         final JobTaskId jobTaskId = JobTaskId.fromMessageId(jobTaskIdFromTrackingInfo);
-
         final String partitionId = jobTaskId.getPartitionId();
         if (Strings.isNullOrEmpty(partitionId)) {
+            LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_PARSE_PARTITION_ID_FROM_JOB_TASK_ID);
             return createFailureResult(TaskStowingWorkerFailure.FAILED_TO_PARSE_PARTITION_ID_FROM_JOB_TASK_ID);
         }
-
         final String jobId = jobTaskId.getJobId();
         if (Strings.isNullOrEmpty(jobId)) {
+            LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_PARSE_JOB_ID_FROM_JOB_TASK_ID);
             return createFailureResult(TaskStowingWorkerFailure.FAILED_TO_PARSE_JOB_ID_FROM_JOB_TASK_ID);
         }
 
         try {
-            databaseClient.stowTask(
+            databaseClient.insertStowedTask(
                 partitionId,
                 jobId,
                 workerTaskData.getClassifier(),
@@ -103,8 +100,10 @@ public final class TaskStowingWorker implements Worker
                 workerTaskData.getCorrelationId());
             return createSuccessResultNoOutputToQueue();
         } catch (final JsonProcessingException jsonProcessingException) {
+            LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_SERIALIZE_TASK, jsonProcessingException);
             return createFailureResult(TaskStowingWorkerFailure.FAILED_TO_SERIALIZE_TASK, jsonProcessingException);
         } catch (final Exception exception) {
+            LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
             return createFailureResult(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
         }
     }
@@ -125,72 +124,26 @@ public final class TaskStowingWorker implements Worker
     public WorkerResponse getGeneralFailureResult(final Throwable t)
     {
         return new WorkerResponse(
-            outputQueue, TaskStatus.RESULT_EXCEPTION, getExceptionData(t), getWorkerIdentifier(), getWorkerApiVersion(), null);
+            outputQueue,
+            TaskStatus.RESULT_EXCEPTION,
+            WorkerResponseFactory.getExceptionData(t, codec),
+            WORKER_IDENTIFIER,
+            WORKER_API_VERSION,
+            null);
     }
 
     private WorkerResponse createSuccessResultNoOutputToQueue()
     {
-        return new WorkerResponse(null, TaskStatus.RESULT_SUCCESS, new byte[]{}, getWorkerIdentifier(), getWorkerApiVersion(), null);
+        return WorkerResponseFactory.createSuccessResultNoOutputToQueue(WORKER_IDENTIFIER, WORKER_API_VERSION);
     }
 
     private WorkerResponse createFailureResult(final String failure)
     {
-        LOGGER.error(failure);
-        try {
-            byte[] data = codec.serialise(failure);
-            return new WorkerResponse(outputQueue, TaskStatus.RESULT_FAILURE, data, getWorkerIdentifier(), getWorkerApiVersion(), null);
-        } catch (final CodecException e) {
-            throw new TaskFailedException("Failed to serialise result", e);
-        }
+        return WorkerResponseFactory.createFailureResult(outputQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure);
     }
 
     private WorkerResponse createFailureResult(final String failure, final Throwable cause)
     {
-        LOGGER.error(failure, cause);
-        final byte[] exceptionData = getExceptionData(new Exception(failure, cause));
-        return new WorkerResponse(
-            outputQueue, TaskStatus.RESULT_FAILURE, exceptionData, getWorkerIdentifier(), getWorkerApiVersion(), null);
-
-    }
-
-    private byte[] getExceptionData(final Throwable t)
-    {
-        try {
-            String exceptionDetail = buildExceptionStackTrace(t);
-            return codec.serialise(exceptionDetail);
-        } catch (CodecException e) {
-            LOGGER.warn("Failed to serialise exception, continuing", e);
-            return new byte[]{};
-        }
-    }
-
-    private static String buildExceptionStackTrace(final Throwable e)
-    {
-        // Build up exception detail from stack trace
-        StringBuilder exceptionStackTrace = new StringBuilder(e.getClass() + " " + e.getMessage());
-        // Check if there is a stack trace on the exception before building it up into a string
-        if (Objects.nonNull(e.getStackTrace())) {
-            exceptionStackTrace.append(stackTraceToString(e.getStackTrace()));
-        }
-        // If a cause exists add it to the exception detail
-        if (Objects.nonNull(e.getCause())) {
-            exceptionStackTrace.
-                append(". Cause: ").append(e.getCause().getClass().toString()).append(" ").append(e.getCause().getMessage());
-            // Check if the cause has a stack trace before building it up into a string
-            if (Objects.nonNull(e.getCause().getStackTrace())) {
-                exceptionStackTrace.append(stackTraceToString(e.getCause().getStackTrace()));
-            }
-        }
-        return exceptionStackTrace.toString();
-    }
-
-    private static String stackTraceToString(final StackTraceElement[] stackTraceElements)
-    {
-        StringBuilder stackTraceStr = new StringBuilder();
-        // From each stack trace element, build up the stack trace
-        for (StackTraceElement stackTraceElement : stackTraceElements) {
-            stackTraceStr.append(" ").append(stackTraceElement.toString());
-        }
-        return stackTraceStr.toString();
+        return WorkerResponseFactory.createFailureResult(outputQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure, cause);
     }
 }

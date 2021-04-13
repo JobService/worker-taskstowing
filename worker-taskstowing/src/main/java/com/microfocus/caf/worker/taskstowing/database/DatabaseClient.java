@@ -18,50 +18,27 @@
  */
 package com.microfocus.caf.worker.taskstowing.database;
 
-import com.microfocus.caf.worker.taskstowing.exceptions.UnexpectedNumberOfRowsInsertedException;
 import com.microfocus.caf.worker.taskstowing.factory.TaskStowingWorkerConfiguration;
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.statement.Update;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static com.microfocus.caf.worker.taskstowing.database.StowedTaskColumnName.*;
+import java.util.List;
 import org.jdbi.v3.postgres.PostgresPlugin;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 public final class DatabaseClient
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseClient.class);
     private final Jdbi jdbi;
-    private final String insertStowedTaskSql;
+    private final String tableName;
 
     public DatabaseClient(final TaskStowingWorkerConfiguration configuration)
     {
-        this.jdbi = Jdbi.create(HikariDataSourceFactory.createHikariDataSource(configuration)).installPlugin(new PostgresPlugin());
-
-        this.insertStowedTaskSql = String.format(
-            "INSERT INTO %s (%s,%s,%s,%s,%s,%s,%s,\"%s\",%s,%s,%s) VALUES (:%s,:%s,:%s,:%s,:%s,:%s,:%s,:%s,:%s,:%s,:%s)",
-            configuration.getDatabaseTableName(),
-            PARTITION_ID,
-            JOB_ID,
-            TASK_CLASSIFIER,
-            TASK_API_VERSION,
-            TASK_DATA,
-            TASK_STATUS,
-            CONTEXT,
-            TO,
-            TRACKING_INFO,
-            SOURCE_INFO,
-            CORRELATION_ID,
-            PARTITION_ID,
-            JOB_ID,
-            TASK_CLASSIFIER,
-            TASK_API_VERSION,
-            TASK_DATA,
-            TASK_STATUS,
-            CONTEXT,
-            TO,
-            TRACKING_INFO,
-            SOURCE_INFO,
-            CORRELATION_ID);
+        this.jdbi = Jdbi
+            .create(HikariDataSourceFactory.createHikariDataSource(configuration))
+            .installPlugin(new PostgresPlugin())
+            .installPlugin(new SqlObjectPlugin());
+        this.tableName = configuration.getDatabaseTableName();
     }
 
     public void checkHealth() throws Exception
@@ -71,7 +48,7 @@ public final class DatabaseClient
         });
     }
 
-    public void stowTask(
+    public void insertStowedTask(
         final String partitionId,
         final String jobId,
         final String taskClassifier,
@@ -85,26 +62,53 @@ public final class DatabaseClient
         final String correlationId) throws Exception
     {
         jdbi.useHandle(handle -> {
-            final Update update = handle.createUpdate(insertStowedTaskSql)
-                .bind(PARTITION_ID, partitionId)
-                .bind(JOB_ID, jobId)
-                .bind(TASK_CLASSIFIER, taskClassifier)
-                .bind(TASK_API_VERSION, taskApiVersion)
-                .bind(TASK_DATA, taskData)
-                .bind(TASK_STATUS, taskStatus)
-                .bind(CONTEXT, context)
-                .bind(TO, to)
-                .bind(TRACKING_INFO, trackingInfo)
-                .bind(SOURCE_INFO, sourceInfo)
-                .bind(CORRELATION_ID, correlationId);
+            final StowedTaskDAO stowedTaskDAO = handle.attach(StowedTaskDAO.class);
+            stowedTaskDAO.insertStowedTask(
+                tableName,
+                partitionId,
+                jobId,
+                taskClassifier,
+                taskApiVersion,
+                taskData,
+                taskStatus,
+                context,
+                to,
+                trackingInfo,
+                sourceInfo,
+                correlationId);
+            LOGGER.info("Successfully inserted task for partition ID {} and job ID {}", partitionId, jobId);
+        });
+    }
 
-            final int numOfRowsInserted = update.execute();
-            if (numOfRowsInserted == 1) {
-                LOGGER.info("Successfully stowed task for partition ID {} and job ID {}", partitionId, jobId);
-            } else {
-                throw new UnexpectedNumberOfRowsInsertedException(
-                    "Expected 1 row to be inserted into database, but was " + numOfRowsInserted);
-            }
+    public void insertStowedTasks(
+        final List<String> partitionIdList,
+        final List<String> jobIdList,
+        final List<String> taskClassifierList,
+        final List<Integer> taskApiVersionList,
+        final List<byte[]> taskDataList,
+        final List<String> taskStatusList,
+        final List<byte[]> contextList,
+        final List<String> toList,
+        final List<byte[]> trackingInfoList,
+        final List<byte[]> sourceInfoList,
+        final List<String> correlationIdList) throws Exception
+    {
+        jdbi.useHandle(handle -> {
+            final StowedTaskDAO stowedTaskDAO = handle.attach(StowedTaskDAO.class);
+            stowedTaskDAO.insertStowedTasks(
+                tableName,
+                partitionIdList,
+                jobIdList,
+                taskClassifierList,
+                taskApiVersionList,
+                taskDataList,
+                taskStatusList,
+                contextList,
+                toList,
+                trackingInfoList,
+                sourceInfoList,
+                correlationIdList);
+            LOGGER.info("Successfully inserted {} task(s)", partitionIdList.size());
         });
     }
 }

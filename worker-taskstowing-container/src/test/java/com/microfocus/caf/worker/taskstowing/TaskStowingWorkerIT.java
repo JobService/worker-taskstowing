@@ -57,9 +57,13 @@ public class TaskStowingWorkerIT
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerIT.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final String DATA_PROCESSING_ELASTICQUERY_IN_QUEUE = "dataprocessing-elasticquery-in";
     private static final String PAUSED_JOB_STATUS_CHECK_URL_PATH = "/partitions/tenant-acme/jobs/job1/status";
-    private static final String PAUSED_JOB_STATUS_CHECK_URL =
-        String.format("http://%s:%s%s", DOCKER_HOST_ADDRESS, MOCK_SERVICE_PORT, PAUSED_JOB_STATUS_CHECK_URL_PATH);
+    private static final String PAUSED_JOB_STATUS_CHECK_URL
+        = String.format("http://%s:%s%s", DOCKER_HOST_ADDRESS, MOCK_SERVICE_PORT, PAUSED_JOB_STATUS_CHECK_URL_PATH);
+    private static final String ACTIVE_JOB_STATUS_CHECK_URL_PATH = "/partitions/tenant-acme/jobs/job2/status";
+    private static final String ACTIVE_JOB_STATUS_CHECK_URL
+        = String.format("http://%s:%s%s", DOCKER_HOST_ADDRESS, MOCK_SERVICE_PORT, ACTIVE_JOB_STATUS_CHECK_URL_PATH);
     private static final Date ONE_DAY_AGO = java.sql.Date.valueOf(LocalDate.now().minusDays(1));
     private static final long TWO_MINUTES_IN_MILLIS = 120000L;
 
@@ -70,9 +74,12 @@ public class TaskStowingWorkerIT
     public static void setUpClass() throws IOException, InterruptedException
     {
         // Instruct the mock service to return a "Paused" status whenever the worker calls the specified statusCheckUrl.
-        final MockServiceExpection mockServiceExpection =
-            new MockServiceExpection("GET", PAUSED_JOB_STATUS_CHECK_URL_PATH, 200, JobStatus.Paused.name());
-        MockServiceExpectationAdder.addExpectation(mockServiceExpection);
+        MockServiceExpectationAdder.addExpectation(
+            new MockServiceExpection("GET", PAUSED_JOB_STATUS_CHECK_URL_PATH, 200, JobStatus.Paused.name()));
+
+        // Instruct the mock service to return an "Active" status whenever the worker calls the specified statusCheckUrl.
+        MockServiceExpectationAdder.addExpectation(
+            new MockServiceExpection("GET", ACTIVE_JOB_STATUS_CHECK_URL_PATH, 200, JobStatus.Active.name()));
     }
 
     @BeforeMethod
@@ -90,7 +97,7 @@ public class TaskStowingWorkerIT
         LOGGER.info("End of: {}", method.getName());
     }
 
-    @Test // Test stowing a task from a DocumentWorker, as opposed to a Worker.
+    @Test // Test stowing a task from a DocumentWorker, as opposed to a Worker
     public void testStowDocumentWorkerTask() throws IOException, InterruptedException, Exception
     {
         // Given a task message
@@ -112,7 +119,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "dataprocessing-elasticquery-in",
+            DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
             trackingInfo,
             new TaskSourceInfo("agent1", "1.0"),
             "123");
@@ -131,7 +138,7 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for task_classifier", "DocumentWorkerTask", stowedTaskRow.getTaskClassifier());
         assertEquals("Unexpected value in database for task_api_version", 2, stowedTaskRow.getTaskApiVersion());
         assertEquals("Unexpected value in database for task_status", "NEW_TASK", stowedTaskRow.getTaskStatus());
-        assertEquals("Unexpected value in database for to", "dataprocessing-elasticquery-in", stowedTaskRow.getTo());
+        assertEquals("Unexpected value in database for to", DATA_PROCESSING_ELASTICQUERY_IN_QUEUE, stowedTaskRow.getTo());
         assertEquals("Unexpected value in database for correlation_id", "123", stowedTaskRow.getCorrelationId());
 
         // task_data
@@ -171,7 +178,7 @@ public class TaskStowingWorkerIT
                      "1.0", taskSourceInfoFromDatabase.getVersion());
     }
 
-    @Test // Test stowing a task from a 'normal' worker, i.e. a Worker rather than a DocumentWorker.
+    @Test // Test stowing a task from a 'normal' worker, i.e. a Worker rather than a DocumentWorker
     public void testStowWorkerTask() throws IOException, InterruptedException, Exception
     {
         // Given a task message
@@ -193,7 +200,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(taskData),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "dataprocessing-elasticquery-in",
+            DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
             trackingInfo,
             new TaskSourceInfo("agent1", "1.0"),
             "123");
@@ -212,7 +219,7 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for task_classifier", "DocumentWorkerTask", stowedTaskRow.getTaskClassifier());
         assertEquals("Unexpected value in database for task_api_version", 2, stowedTaskRow.getTaskApiVersion());
         assertEquals("Unexpected value in database for task_status", "NEW_TASK", stowedTaskRow.getTaskStatus());
-        assertEquals("Unexpected value in database for to", "dataprocessing-elasticquery-in", stowedTaskRow.getTo());
+        assertEquals("Unexpected value in database for to", DATA_PROCESSING_ELASTICQUERY_IN_QUEUE, stowedTaskRow.getTo());
         assertEquals("Unexpected value in database for correlation_id", "123", stowedTaskRow.getCorrelationId());
 
         // task_data
@@ -252,6 +259,47 @@ public class TaskStowingWorkerIT
                      "1.0", taskSourceInfoFromDatabase.getVersion());
     }
 
+    @Test // When this worker recieves a task for a job that is active, it should forward the task rather than stowing it
+    public void testForwardTaskWhenJobIsActive() throws IOException, InterruptedException, Exception
+    {
+        // Given a task message with a statusCheckUrl that will return an "Active" status
+        final TrackingInfo trackingInfo = new TrackingInfo(
+            "tenant-acme:job2",
+            ONE_DAY_AGO,
+            TWO_MINUTES_IN_MILLIS,
+            ACTIVE_JOB_STATUS_CHECK_URL,
+            "dataprocessing-jobtracking-in",
+            null);
+
+        final Map<String, String> taskData = new HashMap<>();
+        taskData.put("someTaskDataKey", "someTaskDataValue");
+
+        final TaskMessage taskMessage = new TaskMessage(
+            UUID.randomUUID().toString(),
+            "DocumentWorkerTask",
+            2,
+            OBJECT_MAPPER.writeValueAsBytes(taskData),
+            TaskStatus.NEW_TASK,
+            Collections.<String, byte[]>emptyMap(),
+            DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
+            trackingInfo,
+            new TaskSourceInfo("agent1", "1.0"),
+            "123");
+
+        // When the task message is sent to the worker
+        queueServices.startListening();
+        queueServices.sendTaskMessage(taskMessage);
+
+        // Then the worker should have forwarded the message to the worker whom the task is intended for (the "to" field in the task msg)
+        queueServices.waitForForwardQueueMessages(1, 30000);
+        assertEquals("Expected 1 message to have been forwarded to the worker pointed to by the 'to' field in the task message", 1,
+                     queueServices.getForwardQueueMessages().size());
+
+        // and the worker should NOT have stowed the task message in the database
+        final List<StowedTaskRow> stowedTaskRows = integrationTestDatabaseClient.getStowedTasks();
+        assertEquals("Expected 0 rows to have been written to the database", 0, stowedTaskRows.size());
+    }
+
     @Test
     public void testTaskWithoutJobTaskIdIsNotStowed() throws IOException, InterruptedException, Exception
     {
@@ -274,7 +322,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "<dataprocessing-elasticquery-in",
+            DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
             trackingInfo,
             null,
             null);
@@ -315,7 +363,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "dataprocessing-elasticquery-in",
+            DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
             trackingInfo,
             null,
             null);
@@ -356,7 +404,7 @@ public class TaskStowingWorkerIT
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
             Collections.<String, byte[]>emptyMap(),
-            "dataprocessing-elasticquery-in",
+            DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
             trackingInfo,
             null,
             null);

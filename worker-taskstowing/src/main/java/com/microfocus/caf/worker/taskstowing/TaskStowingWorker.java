@@ -62,6 +62,8 @@ public final class TaskStowingWorker implements Worker
     @Override
     public WorkerResponse doWork() throws InterruptedException, TaskRejectedException, InvalidTaskException
     {
+        LOGGER.info("Received request to stow task");
+
         final TrackingInfo trackingInfo = workerTaskData.getTrackingInfo();
         if (trackingInfo == null) {
             LOGGER.error(TaskStowingWorkerFailure.TRACKING_INFO_NOT_PRESENT);

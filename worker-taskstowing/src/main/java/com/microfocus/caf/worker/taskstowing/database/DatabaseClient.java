@@ -76,7 +76,7 @@ public final class DatabaseClient
                 trackingInfo,
                 sourceInfo,
                 correlationId);
-            LOGGER.info("Successfully inserted task for partition ID {} and job ID {}", partitionId, jobId);
+            LOGGER.info("Successfully stowed task for partition ID {} and job ID {}", partitionId, jobId);
         });
     }
 
@@ -108,7 +108,7 @@ public final class DatabaseClient
                 trackingInfoList,
                 sourceInfoList,
                 correlationIdList);
-            LOGGER.info("Successfully inserted {} task(s)", partitionIdList.size());
+            LOGGER.info("Successfully stowed {} task(s)", partitionIdList.size());
         });
     }
 }

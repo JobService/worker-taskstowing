@@ -59,6 +59,8 @@ public final class TaskStowingBulkWorker
 
     public void processTasks()
     {
+        LOGGER.info("Received request to stow {} task(s)", workerTasks.size());
+
         final List<WorkerTask> validatedWorkerTasks = new ArrayList<>();
 
         final List<String> partitionIdList = new ArrayList<>();
@@ -127,47 +129,50 @@ public final class TaskStowingBulkWorker
             }
         }
 
+        if (validatedWorkerTasks.isEmpty()) {
+            // An error will already have been logged and a response set on each task that failed validation, so just return.
+            return;
+        }
+
+        if (anyListsEmptyOrNotSameSize(validatedWorkerTasks,
+                                       partitionIdList,
+                                       jobIdList,
+                                       taskClassifierList,
+                                       taskApiVersionList,
+                                       taskDataList,
+                                       taskStatusList,
+                                       contextList,
+                                       toList,
+                                       trackingInfoList,
+                                       sourceInfoList,
+                                       correlationIdList)) {
+            // Should not happen normally, but want to make sure we don't go ahead with the database insertion if it does.
+            LOGGER.error(TaskStowingWorkerFailure.UNKNOWN_ERROR);
+            validatedWorkerTasks.forEach(workerTask -> {
+                workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.UNKNOWN_ERROR));
+            });
+            return;
+        }
+
+        LOGGER.info("{}/{} task(s) were validated without errors, will now attempt to stow {} task(s)",
+                    validatedWorkerTasks.size(), validatedWorkerTasks.size(), workerTasks.size());
         try {
-            if (!validatedWorkerTasks.isEmpty()) {
-                if (anyListsEmptyOrNotSameSize(validatedWorkerTasks,
-                                               partitionIdList,
-                                               jobIdList,
-                                               taskClassifierList,
-                                               taskApiVersionList,
-                                               taskDataList,
-                                               taskStatusList,
-                                               contextList,
-                                               toList,
-                                               trackingInfoList,
-                                               sourceInfoList,
-                                               correlationIdList)) {
-                    // Should not happen normally, but want to make sure we don't go ahead with the database insertion if it does.
-                    LOGGER.error(TaskStowingWorkerFailure.UNKNOWN_ERROR);
-                    validatedWorkerTasks.forEach(workerTask -> {
-                        workerTask.setResponse(createFailureResult(TaskStowingWorkerFailure.UNKNOWN_ERROR));
-                    });
-                    return;
-                }
+            databaseClient.insertStowedTasks(
+                partitionIdList,
+                jobIdList,
+                taskClassifierList,
+                taskApiVersionList,
+                taskDataList,
+                taskStatusList,
+                contextList,
+                toList,
+                trackingInfoList,
+                sourceInfoList,
+                correlationIdList);
 
-                databaseClient.insertStowedTasks(
-                    partitionIdList,
-                    jobIdList,
-                    taskClassifierList,
-                    taskApiVersionList,
-                    taskDataList,
-                    taskStatusList,
-                    contextList,
-                    toList,
-                    trackingInfoList,
-                    sourceInfoList,
-                    correlationIdList);
-
-                validatedWorkerTasks.forEach(workerTask -> {
-                    workerTask.setResponse(createSuccessResultNoOutputToQueue());
-                });
-            }
-            // Else workerTasks is empty, which means there was an error in all the workerTasks received by this worker.
-            // There is nothing to do in this case as an error response will already have been set on each of the tasks before here.
+            validatedWorkerTasks.forEach(workerTask -> {
+                workerTask.setResponse(createSuccessResultNoOutputToQueue());
+            });
         } catch (final Exception exception) {
             LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
             validatedWorkerTasks.forEach(workerTask -> {

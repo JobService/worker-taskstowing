@@ -155,7 +155,7 @@ public final class TaskStowingBulkWorker
         }
 
         LOGGER.info("{}/{} task(s) were validated without errors, will now attempt to stow {} task(s)",
-                    validatedWorkerTasks.size(), validatedWorkerTasks.size(), workerTasks.size());
+                    validatedWorkerTasks.size(), workerTasks.size(), validatedWorkerTasks.size());
         try {
             databaseClient.insertStowedTasks(
                 partitionIdList,

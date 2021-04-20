@@ -103,7 +103,9 @@ public final class TaskStowingBulkWorker
             }
 
             try {
-                // TODO check this: workerTaskData.getContext() always seems to be null, even when the task sent to the worker includes a non-null context?
+                // workerTask.getContext() should not be null, but it's possible if a worker is passed a message with a context map that
+                // has a key that is not the same as the servicePath, in which case the Worker Framework will pass a null context:
+                // https://github.com/WorkerFramework/worker-framework/blob/develop/worker-core/src/main/java/com/hpe/caf/worker/core/WorkerTaskImpl.java#L124
                 final byte[] contextBytes = workerTask.getContext() != null
                     ? workerTask.getContext()
                     : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap());

@@ -112,13 +112,21 @@ public class TaskStowingWorkerIT
         final DocumentWorkerDocumentTask documentWorkerDocumentTask = new DocumentWorkerDocumentTask();
         documentWorkerDocumentTask.document = createSampleDocument();
 
+        // The context key must be set to the servicePath of the worker (which is caf/worker), otherwise the context won't be passed to
+        // the worker:
+        // https://github.com/WorkerFramework/worker-framework/blob/develop/worker-core/src/main/java/com/hpe/caf/worker/core/WorkerTaskImpl.java#L124
+        final Map<String, byte[]> context =  new HashMap<>();
+        final Map<String, String> contextContents = new HashMap<>();
+        contextContents.put("a-context-key", "a-context-value");
+        context.put("caf/worker", OBJECT_MAPPER.writeValueAsBytes(contextContents));
+
         final TaskMessage taskMessage = new TaskMessage(
             UUID.randomUUID().toString(),
             "DocumentWorkerTask",
             2,
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
-            Collections.<String, byte[]>emptyMap(),
+            context,
             DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
             trackingInfo,
             new TaskSourceInfo("agent1", "1.0"),
@@ -152,7 +160,8 @@ public class TaskStowingWorkerIT
 
         // context
         final Map<String, byte[]> contextFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getContext(), Map.class);
-        assertEquals("Unexpected value in database for context", 0, contextFromDatabase.size());
+        assertEquals("Unexpected size of context in database", 1, contextFromDatabase.size());
+        assertEquals("Unexpected value of a-context-key in database", "a-context-value", contextFromDatabase.get("a-context-key"));
 
         // tracking_info
         final TrackingInfo trackingInfoFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getTrackingInfo(), TrackingInfo.class);

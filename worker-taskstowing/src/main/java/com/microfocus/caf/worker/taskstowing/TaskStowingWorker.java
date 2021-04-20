@@ -87,6 +87,15 @@ public final class TaskStowingWorker implements Worker
         }
 
         try {
+            // workerTask.getContext() should not be null, but it's possible if a worker is passed a message with a context map that
+            // has a key that is not the same as the servicePath, in which case the Worker Framework will pass a null context:
+            // https://github.com/WorkerFramework/worker-framework/blob/develop/worker-core/src/main/java/com/hpe/caf/worker/core/WorkerTaskImpl.java#L124
+            final byte[] contextBytes = workerTaskData.getContext() != null
+                ? workerTaskData.getContext()
+                : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap());
+            final byte[] trackingInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getTrackingInfo());
+            final byte[] sourceInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getSourceInfo());
+
             databaseClient.insertStowedTask(
                 partitionId,
                 jobId,
@@ -94,11 +103,10 @@ public final class TaskStowingWorker implements Worker
                 workerTaskData.getVersion(),
                 workerTaskData.getData(),
                 workerTaskData.getStatus().name(),
-                workerTaskData.getContext() != null ? workerTaskData.getContext()
-                : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap()), // TODO check this: workerTaskData.getContext() always seems to be null, even when the task sent to the worker includes a non-null context?
+                contextBytes,
                 workerTaskData.getTo(),
-                OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getTrackingInfo()),
-                OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getSourceInfo()),
+                trackingInfoBytes,
+                sourceInfoBytes,
                 workerTaskData.getCorrelationId());
             return createSuccessResultNoOutputToQueue();
         } catch (final JsonProcessingException jsonProcessingException) {

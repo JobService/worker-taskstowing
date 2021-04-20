@@ -28,7 +28,7 @@ import com.hpe.caf.api.worker.BulkWorkerRuntime;
 import com.hpe.caf.api.worker.DataStore;
 import com.hpe.caf.api.worker.InvalidTaskException;
 import com.hpe.caf.api.worker.JobStatus;
-import com.hpe.caf.api.worker.NotIndendedTaskMessageForwardingEvaluator;
+import com.hpe.caf.api.worker.NotIntendedTaskMessageForwardingEvaluator;
 import com.hpe.caf.api.worker.TaskForwardingAction;
 import com.hpe.caf.api.worker.TaskInformation;
 import com.hpe.caf.api.worker.TaskMessage;
@@ -49,7 +49,7 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class TaskStowingWorkerFactory implements WorkerFactory, NotIndendedTaskMessageForwardingEvaluator, BulkWorker
+public final class TaskStowingWorkerFactory implements WorkerFactory, NotIntendedTaskMessageForwardingEvaluator, BulkWorker
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerFactory.class);
 

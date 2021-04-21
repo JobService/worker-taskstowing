@@ -36,7 +36,7 @@ final class StowedTaskRowMapper implements RowMapper<StowedTaskRow>
             resultSet.getBytes(CONTEXT),
             resultSet.getString(TO),
             resultSet.getString(TRACKING_INFO_JOB_TASK_ID),
-            resultSet.getDate(TRACKING_INFO_LAST_STATUS_CHECK_TIME),
+            resultSet.getLong(TRACKING_INFO_LAST_STATUS_CHECK_TIME),
             resultSet.getLong(TRACKING_INFO_STATUS_CHECK_INTERVAL_MILLIS),
             resultSet.getString(TRACKING_INFO_STATUS_CHECK_URL),
             resultSet.getString(TRACKING_INFO_TRACKING_PIPE),

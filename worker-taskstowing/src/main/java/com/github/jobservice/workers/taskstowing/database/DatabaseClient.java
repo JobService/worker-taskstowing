@@ -16,7 +16,6 @@
 package com.github.jobservice.workers.taskstowing.database;
 
 import com.github.jobservice.workers.taskstowing.factory.TaskStowingWorkerConfiguration;
-import java.util.Date;
 import org.jdbi.v3.core.Jdbi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +55,7 @@ public final class DatabaseClient
         final byte[] context,
         final String to,
         final String trackingInfoJobTaskId,
-        final Date trackingInfoLastStatusCheckTime,
+        final Long trackingInfoLastStatusCheckTime,
         final Long trackingInfoStatusCheckIntervalMillis,
         final String trackingInfoStatusCheckUrl,
         final String trackingInfoTrackingPipe,
@@ -98,7 +97,7 @@ public final class DatabaseClient
         final List<byte[]> contextList,
         final List<String> toList,
         final List<String> trackingInfoJobTaskIdList,
-        final List<Date> trackingInfoLastStatusCheckTimeList,
+        final List<Long> trackingInfoLastStatusCheckTimeList,
         final List<Long> trackingInfoStatusCheckIntervalMillisList,
         final List<String> trackingInfoStatusCheckUrlList,
         final List<String> trackingInfoTrackingPipeList,

@@ -102,7 +102,7 @@ public final class TaskStowingWorker implements Worker
                 contextBytes,
                 workerTaskData.getTo(),
                 trackingInfo.getJobTaskId(),
-                trackingInfo.getLastStatusCheckTime(),
+                trackingInfo.getLastStatusCheckTime().getTime(),
                 trackingInfo.getStatusCheckIntervalMillis(),
                 trackingInfo.getStatusCheckUrl(),
                 trackingInfo.getTrackingPipe(),

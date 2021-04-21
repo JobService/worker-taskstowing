@@ -21,7 +21,6 @@ import org.jdbi.v3.sqlobject.customizer.Define;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.jdbi.v3.sqlobject.statement.SqlBatch;
 import static com.github.jobservice.workers.taskstowing.database.StowedTaskColumnName.*;
-import java.util.Date;
 
 interface StowedTaskDAO
 {
@@ -56,7 +55,7 @@ interface StowedTaskDAO
                           @Bind("context") final byte[] context,
                           @Bind("to") final String to,
                           @Bind("trackingInfoJobTaskId") final String trackingInfoJobTaskId,
-                          @Bind("trackingInfoLastStatusCheckTime") final Date trackingInfoLastStatusCheckTime,
+                          @Bind("trackingInfoLastStatusCheckTime") final Long trackingInfoLastStatusCheckTime,
                           @Bind("trackingInfoStatusCheckIntervalMillis") final Long trackingInfoStatusCheckIntervalMillis,
                           @Bind("trackingInfoStatusCheckUrl") final String trackingInfoStatusCheckUrl,
                           @Bind("trackingInfoTrackingPipe") final String trackingInfoTrackingPipe,
@@ -95,7 +94,7 @@ interface StowedTaskDAO
                            @Bind("context") final List<byte[]> contextList,
                            @Bind("to") final List<String> toList,
                            @Bind("trackingInfoJobTaskId") final List<String> trackingInfoJobTaskId,
-                           @Bind("trackingInfoLastStatusCheckTime") final List<Date> trackingInfoLastStatusCheckTime,
+                           @Bind("trackingInfoLastStatusCheckTime") final List<Long> trackingInfoLastStatusCheckTime,
                            @Bind("trackingInfoStatusCheckIntervalMillis") final List<Long> trackingInfoStatusCheckIntervalMillis,
                            @Bind("trackingInfoStatusCheckUrl") final List<String> trackingInfoStatusCheckUrl,
                            @Bind("trackingInfoTrackingPipe") final List<String> trackingInfoTrackingPipe,

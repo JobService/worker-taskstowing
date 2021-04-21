@@ -15,8 +15,6 @@
  */
 package com.github.jobservice.workers.taskstowing;
 
-import java.util.Date;
-
 final class StowedTaskRow
 {
     private final String partitionId;
@@ -28,7 +26,7 @@ final class StowedTaskRow
     private final byte[] context;
     private final String to;
     private final String trackingInfoJobTaskId;
-    private final Date trackingInfoLastStatusCheckTime;
+    private final Long trackingInfoLastStatusCheckTime;
     private final Long trackingInfoStatusCheckIntervalMillis;
     private final String trackingInfoStatusCheckUrl;
     private final String trackingInfoTrackingPipe;
@@ -46,7 +44,7 @@ final class StowedTaskRow
         final byte[] context,
         final String to,
         final String trackingInfoJobTaskId,
-        final Date trackingInfoLastStatusCheckTime,
+        final Long trackingInfoLastStatusCheckTime,
         final Long trackingInfoStatusCheckIntervalMillis,
         final String trackingInfoStatusCheckUrl,
         final String trackingInfoTrackingPipe,
@@ -117,7 +115,7 @@ final class StowedTaskRow
         return trackingInfoJobTaskId;
     }
 
-    public Date getTrackingInfoLastStatusCheckTime()
+    public Long getTrackingInfoLastStatusCheckTime()
     {
         return trackingInfoLastStatusCheckTime;
     }

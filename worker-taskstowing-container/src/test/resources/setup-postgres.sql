@@ -14,7 +14,7 @@ CREATE TABLE public.stowed_task (
   context bytea NOT NULL,
   "to" varchar(255) NOT NULL,
   tracking_info_job_task_id varchar(255) NOT NULL,
-  tracking_info_last_status_check_time timestamp NULL,
+  tracking_info_last_status_check_time bigint NULL,
   tracking_info_status_check_interval_millis bigint NULL,
   tracking_info_status_check_url TEXT NULL,
   tracking_info_tracking_pipe varchar(255) NULL,

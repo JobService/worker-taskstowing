@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import static com.github.jobservice.workers.taskstowing.IntegrationTestSystemProperties.*;
 import static com.fasterxml.jackson.databind.DeserializationFeature.*;
 import com.hpe.caf.api.worker.JobStatus;
-import java.time.LocalDate;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
@@ -61,7 +60,7 @@ public class TaskStowingWorkerIT
     private static final String ACTIVE_JOB_STATUS_CHECK_URL_PATH = "/partitions/tenant-acme/jobs/job2/status";
     private static final String ACTIVE_JOB_STATUS_CHECK_URL
         = String.format("http://%s:%s%s", DOCKER_HOST_ADDRESS, MOCK_SERVICE_PORT, ACTIVE_JOB_STATUS_CHECK_URL_PATH);
-    private static final Date ONE_DAY_AGO = java.sql.Date.valueOf(LocalDate.now().minusDays(1));
+    private static final Date ONE_DAY_AGO = new Date(System.currentTimeMillis() - 1 * 24 * 3600 * 1000);
     private static final long TWO_MINUTES_IN_MILLIS = 120000L;
 
     private final IntegrationTestDatabaseClient integrationTestDatabaseClient = new IntegrationTestDatabaseClient();

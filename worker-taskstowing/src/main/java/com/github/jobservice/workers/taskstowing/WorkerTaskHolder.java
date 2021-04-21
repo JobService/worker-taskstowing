@@ -25,7 +25,6 @@ import com.hpe.caf.api.worker.WorkerTask;
 import com.hpe.caf.services.job.util.JobTaskId;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,7 @@ public final class WorkerTaskHolder
     private final List<byte[]> contextList;
     private final List<String> toList;
     private final List<String> trackingInfoJobTaskIdList;
-    private final List<Date> trackingInfoLastStatusCheckTimeList;
+    private final List<Long> trackingInfoLastStatusCheckTimeList;
     private final List<Long> trackingInfoStatusCheckIntervalMillisList;
     private final List<String> trackingInfoStatusCheckUrlList;
     private final List<String> trackingInfoTrackingPipeList;
@@ -129,7 +128,7 @@ public final class WorkerTaskHolder
             contextList.add(contextBytes);
             toList.add(workerTask.getTo());
             trackingInfoJobTaskIdList.add(workerTask.getTrackingInfo().getJobTaskId());
-            trackingInfoLastStatusCheckTimeList.add(workerTask.getTrackingInfo().getLastStatusCheckTime());
+            trackingInfoLastStatusCheckTimeList.add(workerTask.getTrackingInfo().getLastStatusCheckTime().getTime());
             trackingInfoStatusCheckIntervalMillisList.add(workerTask.getTrackingInfo().getStatusCheckIntervalMillis());
             trackingInfoStatusCheckUrlList.add(workerTask.getTrackingInfo().getStatusCheckUrl());
             trackingInfoTrackingPipeList.add(workerTask.getTrackingInfo().getTrackingPipe());
@@ -206,7 +205,7 @@ public final class WorkerTaskHolder
         return trackingInfoJobTaskIdList;
     }
 
-    public List<Date> getTrackingInfoLastStatusCheckTimeList()
+    public List<Long> getTrackingInfoLastStatusCheckTimeList()
     {
         return trackingInfoLastStatusCheckTimeList;
     }

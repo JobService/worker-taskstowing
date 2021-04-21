@@ -141,7 +141,7 @@ public final class TaskStowingBulkWorker
         final List<byte[]> contextList,
         final List<String> toList,
         final List<String> trackingInfoJobTaskIdList,
-        final List<Date> trackingInfoLastStatusCheckTimeList,
+        final List<Long> trackingInfoLastStatusCheckTimeList,
         final List<Long> trackingInfoStatusCheckIntervalMillisList,
         final List<String> trackingInfoStatusCheckUrlList,
         final List<String> trackingInfoTrackingPipeList,

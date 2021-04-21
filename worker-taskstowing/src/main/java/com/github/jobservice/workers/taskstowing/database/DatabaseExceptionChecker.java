@@ -19,7 +19,6 @@ import com.google.common.collect.Lists;
 import java.sql.SQLException;
 import java.sql.SQLTransientException;
 import java.util.List;
-import org.jdbi.v3.core.ConnectionException;
 import org.jdbi.v3.core.JdbiException;
 
 public final class DatabaseExceptionChecker

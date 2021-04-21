@@ -27,7 +27,6 @@ final class StowedTaskRowMapper implements RowMapper<StowedTaskRow>
     public StowedTaskRow map(final ResultSet resultSet, final StatementContext statementContext) throws SQLException
     {
         return new StowedTaskRow(
-            resultSet.getLong(ID),
             resultSet.getString(PARTITION_ID),
             resultSet.getString(JOB_ID),
             resultSet.getString(TASK_CLASSIFIER),
@@ -36,7 +35,12 @@ final class StowedTaskRowMapper implements RowMapper<StowedTaskRow>
             resultSet.getString(TASK_STATUS),
             resultSet.getBytes(CONTEXT),
             resultSet.getString(TO),
-            resultSet.getBytes(TRACKING_INFO),
+            resultSet.getString(TRACKING_INFO_JOB_TASK_ID),
+            resultSet.getDate(TRACKING_INFO_LAST_STATUS_CHECK_TIME),
+            resultSet.getLong(TRACKING_INFO_STATUS_CHECK_INTERVAL_MILLIS),
+            resultSet.getString(TRACKING_INFO_STATUS_CHECK_URL),
+            resultSet.getString(TRACKING_INFO_TRACKING_PIPE),
+            resultSet.getString(TRACKING_INFO_TRACK_TO),
             resultSet.getBytes(SOURCE_INFO),
             resultSet.getString(CORRELATION_ID));
     }

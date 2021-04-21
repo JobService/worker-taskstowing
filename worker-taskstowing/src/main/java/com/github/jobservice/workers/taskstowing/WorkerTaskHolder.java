@@ -25,6 +25,7 @@ import com.hpe.caf.api.worker.WorkerTask;
 import com.hpe.caf.services.job.util.JobTaskId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,12 @@ public final class WorkerTaskHolder
     private final List<String> taskStatusList;
     private final List<byte[]> contextList;
     private final List<String> toList;
-    private final List<byte[]> trackingInfoList;
+    private final List<String> trackingInfoJobTaskIdList;
+    private final List<Date> trackingInfoLastStatusCheckTimeList;
+    private final List<Long> trackingInfoStatusCheckIntervalMillisList;
+    private final List<String> trackingInfoStatusCheckUrlList;
+    private final List<String> trackingInfoTrackingPipeList;
+    private final List<String> trackingInfoTrackToList;
     private final List<byte[]> sourceInfoList;
     private final List<String> correlationIdList;
 
@@ -64,7 +70,12 @@ public final class WorkerTaskHolder
         this.taskStatusList = new ArrayList<>();
         this.contextList = new ArrayList<>();
         this.toList = new ArrayList<>();
-        this.trackingInfoList = new ArrayList<>();
+        this.trackingInfoJobTaskIdList = new ArrayList<>();
+        this.trackingInfoLastStatusCheckTimeList = new ArrayList<>();
+        this.trackingInfoStatusCheckIntervalMillisList = new ArrayList<>();
+        this.trackingInfoStatusCheckUrlList = new ArrayList<>();
+        this.trackingInfoTrackingPipeList = new ArrayList<>();
+        this.trackingInfoTrackToList = new ArrayList<>();
         this.sourceInfoList = new ArrayList<>();
         this.correlationIdList = new ArrayList<>();
     }
@@ -106,7 +117,6 @@ public final class WorkerTaskHolder
             final byte[] contextBytes = workerTask.getContext() != null
                 ? workerTask.getContext()
                 : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap());
-            final byte[] trackingInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTask.getTrackingInfo());
             final byte[] sourceInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTask.getSourceInfo());
 
             workerTaskList.add(workerTask);
@@ -118,7 +128,12 @@ public final class WorkerTaskHolder
             taskStatusList.add(workerTask.getStatus().name());
             contextList.add(contextBytes);
             toList.add(workerTask.getTo());
-            trackingInfoList.add(trackingInfoBytes);
+            trackingInfoJobTaskIdList.add(workerTask.getTrackingInfo().getJobTaskId());
+            trackingInfoLastStatusCheckTimeList.add(workerTask.getTrackingInfo().getLastStatusCheckTime());
+            trackingInfoStatusCheckIntervalMillisList.add(workerTask.getTrackingInfo().getStatusCheckIntervalMillis());
+            trackingInfoStatusCheckUrlList.add(workerTask.getTrackingInfo().getStatusCheckUrl());
+            trackingInfoTrackingPipeList.add(workerTask.getTrackingInfo().getTrackingPipe());
+            trackingInfoTrackToList.add(workerTask.getTrackingInfo().getTrackTo());
             sourceInfoList.add(sourceInfoBytes);
             correlationIdList.add(workerTask.getCorrelationId());
             return true;
@@ -186,9 +201,34 @@ public final class WorkerTaskHolder
         return toList;
     }
 
-    public List<byte[]> getTrackingInfoList()
+    public List<String> getTrackingInfoJobTaskIdList()
     {
-        return trackingInfoList;
+        return trackingInfoJobTaskIdList;
+    }
+
+    public List<Date> getTrackingInfoLastStatusCheckTimeList()
+    {
+        return trackingInfoLastStatusCheckTimeList;
+    }
+
+    public List<Long> getTrackingInfoStatusCheckIntervalMillisList()
+    {
+        return trackingInfoStatusCheckIntervalMillisList;
+    }
+
+    public List<String> getTrackingInfoStatusCheckUrlList()
+    {
+        return trackingInfoStatusCheckUrlList;
+    }
+
+    public List<String> getTrackingInfoTrackingPipeList()
+    {
+        return trackingInfoTrackingPipeList;
+    }
+
+    public List<String> getTrackingInfoTrackToList()
+    {
+        return trackingInfoTrackToList;
     }
 
     public List<byte[]> getSourceInfoList()

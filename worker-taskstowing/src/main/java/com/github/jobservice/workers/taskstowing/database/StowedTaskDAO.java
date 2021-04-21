@@ -21,6 +21,7 @@ import org.jdbi.v3.sqlobject.customizer.Define;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.jdbi.v3.sqlobject.statement.SqlBatch;
 import static com.github.jobservice.workers.taskstowing.database.StowedTaskColumnName.*;
+import java.util.Date;
 
 interface StowedTaskDAO
 {
@@ -34,11 +35,17 @@ interface StowedTaskDAO
         + TASK_STATUS + ", "
         + CONTEXT + ", \""
         + TO + "\", "
-        + TRACKING_INFO + ", "
+        + TRACKING_INFO_JOB_TASK_ID + ", "
+        + TRACKING_INFO_LAST_STATUS_CHECK_TIME + ", "
+        + TRACKING_INFO_STATUS_CHECK_INTERVAL_MILLIS + ", "
+        + TRACKING_INFO_STATUS_CHECK_URL + ", "
+        + TRACKING_INFO_TRACKING_PIPE + ", "
+        + TRACKING_INFO_TRACK_TO + ", "
         + SOURCE_INFO + ", "
         + CORRELATION_ID + ") values "
-        + "(:partitionId, :jobId, :taskClassifier, :taskApiVersion, :taskData, :taskStatus, :context, :to, :trackingInfo, :sourceInfo, "
-            + ":correlationId)")
+        + "(:partitionId, :jobId, :taskClassifier, :taskApiVersion, :taskData, :taskStatus, :context, :to, :trackingInfoJobTaskId, "
+        + ":trackingInfoLastStatusCheckTime, :trackingInfoStatusCheckIntervalMillis, :trackingInfoStatusCheckUrl, "
+        + ":trackingInfoTrackingPipe, :trackingInfoTrackTo, :sourceInfo, :correlationId)")
     void insertStowedTask(@Define("table") final String table,
                           @Bind("partitionId") final String partitionId,
                           @Bind("jobId") final String jobId,
@@ -48,7 +55,12 @@ interface StowedTaskDAO
                           @Bind("taskStatus") final String taskStatus,
                           @Bind("context") final byte[] context,
                           @Bind("to") final String to,
-                          @Bind("trackingInfo") final byte[] trackingInfo,
+                          @Bind("trackingInfoJobTaskId") final String trackingInfoJobTaskId,
+                          @Bind("trackingInfoLastStatusCheckTime") final Date trackingInfoLastStatusCheckTime,
+                          @Bind("trackingInfoStatusCheckIntervalMillis") final Long trackingInfoStatusCheckIntervalMillis,
+                          @Bind("trackingInfoStatusCheckUrl") final String trackingInfoStatusCheckUrl,
+                          @Bind("trackingInfoTrackingPipe") final String trackingInfoTrackingPipe,
+                          @Bind("trackingInfoTrackTo") final String trackingInfoTrackTo,
                           @Bind("sourceInfo") final byte[] sourceInfo,
                           @Bind("correlationId") final String correlationId);
 
@@ -62,11 +74,17 @@ interface StowedTaskDAO
         + TASK_STATUS + ", "
         + CONTEXT + ", \""
         + TO + "\", "
-        + TRACKING_INFO + ", "
+        + TRACKING_INFO_JOB_TASK_ID + ", "
+        + TRACKING_INFO_LAST_STATUS_CHECK_TIME + ", "
+        + TRACKING_INFO_STATUS_CHECK_INTERVAL_MILLIS + ", "
+        + TRACKING_INFO_STATUS_CHECK_URL + ", "
+        + TRACKING_INFO_TRACKING_PIPE + ", "
+        + TRACKING_INFO_TRACK_TO + ", "
         + SOURCE_INFO + ", "
         + CORRELATION_ID + ") values "
-        + "(:partitionId, :jobId, :taskClassifier, :taskApiVersion, :taskData, :taskStatus, :context, :to, :trackingInfo, :sourceInfo, "
-            + ":correlationId)")
+        + "(:partitionId, :jobId, :taskClassifier, :taskApiVersion, :taskData, :taskStatus, :context, :to, :trackingInfoJobTaskId, "
+        + ":trackingInfoLastStatusCheckTime, :trackingInfoStatusCheckIntervalMillis, :trackingInfoStatusCheckUrl, "
+        + ":trackingInfoTrackingPipe, :trackingInfoTrackTo, :sourceInfo, :correlationId)")
     void insertStowedTasks(@Define("table") final String table,
                            @Bind("partitionId") final List<String> partitionIdList,
                            @Bind("jobId") final List<String> jobIdList,
@@ -76,7 +94,12 @@ interface StowedTaskDAO
                            @Bind("taskStatus") final List<String> taskStatusList,
                            @Bind("context") final List<byte[]> contextList,
                            @Bind("to") final List<String> toList,
-                           @Bind("trackingInfo") final List<byte[]> trackingInfoList,
+                           @Bind("trackingInfoJobTaskId") final List<String> trackingInfoJobTaskId,
+                           @Bind("trackingInfoLastStatusCheckTime") final List<Date> trackingInfoLastStatusCheckTime,
+                           @Bind("trackingInfoStatusCheckIntervalMillis") final List<Long> trackingInfoStatusCheckIntervalMillis,
+                           @Bind("trackingInfoStatusCheckUrl") final List<String> trackingInfoStatusCheckUrl,
+                           @Bind("trackingInfoTrackingPipe") final List<String> trackingInfoTrackingPipe,
+                           @Bind("trackingInfoTrackTo") final List<String> trackingInfoTrackTo,
                            @Bind("sourceInfo") final List<byte[]> sourceInfoList,
                            @Bind("correlationId") final List<String> correlationIdList);
 

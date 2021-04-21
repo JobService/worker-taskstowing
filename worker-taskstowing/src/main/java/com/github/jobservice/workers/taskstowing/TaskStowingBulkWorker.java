@@ -22,6 +22,7 @@ import com.github.jobservice.workers.taskstowing.database.DatabaseClient;
 import com.github.jobservice.workers.taskstowing.database.DatabaseExceptionChecker;
 import com.hpe.caf.api.worker.TaskRejectedException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +63,12 @@ public final class TaskStowingBulkWorker
                                        workerTaskHolder.getTaskStatusList(),
                                        workerTaskHolder.getContextList(),
                                        workerTaskHolder.getToList(),
-                                       workerTaskHolder.getTrackingInfoList(),
+                                       workerTaskHolder.getTrackingInfoJobTaskIdList(),
+                                       workerTaskHolder.getTrackingInfoLastStatusCheckTimeList(),
+                                       workerTaskHolder.getTrackingInfoStatusCheckIntervalMillisList(),
+                                       workerTaskHolder.getTrackingInfoStatusCheckUrlList(),
+                                       workerTaskHolder.getTrackingInfoTrackingPipeList(),
+                                       workerTaskHolder.getTrackingInfoTrackToList(),
                                        workerTaskHolder.getSourceInfoList(),
                                        workerTaskHolder.getCorrelationIdList())) {
             // Should not happen normally, but want to make sure we don't go ahead with the database insertion if it does.
@@ -83,7 +89,12 @@ public final class TaskStowingBulkWorker
                 workerTaskHolder.getTaskStatusList(),
                 workerTaskHolder.getContextList(),
                 workerTaskHolder.getToList(),
-                workerTaskHolder.getTrackingInfoList(),
+                workerTaskHolder.getTrackingInfoJobTaskIdList(),
+                workerTaskHolder.getTrackingInfoLastStatusCheckTimeList(),
+                workerTaskHolder.getTrackingInfoStatusCheckIntervalMillisList(),
+                workerTaskHolder.getTrackingInfoStatusCheckUrlList(),
+                workerTaskHolder.getTrackingInfoTrackingPipeList(),
+                workerTaskHolder.getTrackingInfoTrackToList(),
                 workerTaskHolder.getSourceInfoList(),
                 workerTaskHolder.getCorrelationIdList());
 
@@ -129,7 +140,12 @@ public final class TaskStowingBulkWorker
         final List<String> taskStatusList,
         final List<byte[]> contextList,
         final List<String> toList,
-        final List<byte[]> trackingInfoList,
+        final List<String> trackingInfoJobTaskIdList,
+        final List<Date> trackingInfoLastStatusCheckTimeList,
+        final List<Long> trackingInfoStatusCheckIntervalMillisList,
+        final List<String> trackingInfoStatusCheckUrlList,
+        final List<String> trackingInfoTrackingPipeList,
+        final List<String> trackingInfoTrackToList,
         final List<byte[]> sourceInfoList,
         final List<String> correlationIdList)
     {
@@ -143,7 +159,12 @@ public final class TaskStowingBulkWorker
         lists.add(taskStatusList);
         lists.add(contextList);
         lists.add(toList);
-        lists.add(trackingInfoList);
+        lists.add(trackingInfoJobTaskIdList);
+        lists.add(trackingInfoLastStatusCheckTimeList);
+        lists.add(trackingInfoStatusCheckIntervalMillisList);
+        lists.add(trackingInfoStatusCheckUrlList);
+        lists.add(trackingInfoTrackingPipeList);
+        lists.add(trackingInfoTrackToList);
         lists.add(sourceInfoList);
         lists.add(correlationIdList);
 

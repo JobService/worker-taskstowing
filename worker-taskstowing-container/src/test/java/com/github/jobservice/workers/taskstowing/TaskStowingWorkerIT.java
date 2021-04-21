@@ -162,19 +162,17 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value of a-context-key in database", "a-context-value", contextFromDatabase.get("a-context-key"));
 
         // tracking_info
-        final TrackingInfo trackingInfoFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getTrackingInfo(), TrackingInfo.class);
-        assertNotNull("tracking_info value in database should not be null", trackingInfoFromDatabase);
         assertEquals("Unexpected value in database for tracking_info.jobTaskId",
-                     "tenant-acme:job1", trackingInfoFromDatabase.getJobTaskId());
+                     "tenant-acme:job1", stowedTaskRow.getTrackingInfoJobTaskId());
         assertNotNull("tracking_info.lastStatusCheckTime value in database should not be null",
-                      trackingInfoFromDatabase.getLastStatusCheckTime());
+                      stowedTaskRow.getTrackingInfoLastStatusCheckTime());
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
-                     TWO_MINUTES_IN_MILLIS, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
+                     TWO_MINUTES_IN_MILLIS, stowedTaskRow.getTrackingInfoStatusCheckIntervalMillis().longValue());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     PAUSED_JOB_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
+                     PAUSED_JOB_STATUS_CHECK_URL, stowedTaskRow.getTrackingInfoStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
-                     "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
-        assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
+                     "dataprocessing-jobtracking-in", stowedTaskRow.getTrackingInfoTrackingPipe());
+        assertNull("tracking_info.trackTo value in database should be null", stowedTaskRow.getTrackingInfoTrackTo());
 
         // source_info
         final TaskSourceInfo taskSourceInfoFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getSourceInfo(), TaskSourceInfo.class);
@@ -243,19 +241,17 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for context", 0, contextFromDatabase.size());
 
         // tracking_info
-        final TrackingInfo trackingInfoFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getTrackingInfo(), TrackingInfo.class);
-        assertNotNull("tracking_info value in database should not be null", trackingInfoFromDatabase);
         assertEquals("Unexpected value in database for tracking_info.jobTaskId",
-                     "tenant-acme:job1", trackingInfoFromDatabase.getJobTaskId());
+                     "tenant-acme:job1", stowedTaskRow.getTrackingInfoJobTaskId());
         assertNotNull("tracking_info.lastStatusCheckTime value in database should not be null",
-                      trackingInfoFromDatabase.getLastStatusCheckTime());
+                      stowedTaskRow.getTrackingInfoLastStatusCheckTime());
         assertEquals("Unexpected value in database for tracking_info.statusCheckIntervalMillis",
-                     TWO_MINUTES_IN_MILLIS, trackingInfoFromDatabase.getStatusCheckIntervalMillis());
+                     TWO_MINUTES_IN_MILLIS, stowedTaskRow.getTrackingInfoStatusCheckIntervalMillis().longValue());
         assertEquals("Unexpected value in database for tracking_info.statusCheckUrl",
-                     PAUSED_JOB_STATUS_CHECK_URL, trackingInfoFromDatabase.getStatusCheckUrl());
+                     PAUSED_JOB_STATUS_CHECK_URL, stowedTaskRow.getTrackingInfoStatusCheckUrl());
         assertEquals("Unexpected value in database for tracking_info.trackingPipe",
-                     "dataprocessing-jobtracking-in", trackingInfoFromDatabase.getTrackingPipe());
-        assertNull("tracking_info.trackTo value in database should be null", trackingInfoFromDatabase.getTrackTo());
+                     "dataprocessing-jobtracking-in", stowedTaskRow.getTrackingInfoTrackingPipe());
+        assertNull("tracking_info.trackTo value in database should be null", stowedTaskRow.getTrackingInfoTrackTo());
 
         // source_info
         final TaskSourceInfo taskSourceInfoFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getSourceInfo(), TaskSourceInfo.class);

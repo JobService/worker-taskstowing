@@ -16,6 +16,7 @@
 package com.github.jobservice.workers.taskstowing.database;
 
 import com.github.jobservice.workers.taskstowing.factory.TaskStowingWorkerConfiguration;
+import java.util.Date;
 import org.jdbi.v3.core.Jdbi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,12 @@ public final class DatabaseClient
         final String taskStatus,
         final byte[] context,
         final String to,
-        final byte[] trackingInfo,
+        final String trackingInfoJobTaskId,
+        final Date trackingInfoLastStatusCheckTime,
+        final Long trackingInfoStatusCheckIntervalMillis,
+        final String trackingInfoStatusCheckUrl,
+        final String trackingInfoTrackingPipe,
+        final String trackingInfoTrackTo,
         final byte[] sourceInfo,
         final String correlationId) throws Exception
     {
@@ -70,7 +76,12 @@ public final class DatabaseClient
                 taskStatus,
                 context,
                 to,
-                trackingInfo,
+                trackingInfoJobTaskId,
+                trackingInfoLastStatusCheckTime,
+                trackingInfoStatusCheckIntervalMillis,
+                trackingInfoStatusCheckUrl,
+                trackingInfoTrackingPipe,
+                trackingInfoTrackTo,
                 sourceInfo,
                 correlationId);
             LOGGER.info("Successfully stowed task for partition ID {} and job ID {}", partitionId, jobId);
@@ -86,7 +97,12 @@ public final class DatabaseClient
         final List<String> taskStatusList,
         final List<byte[]> contextList,
         final List<String> toList,
-        final List<byte[]> trackingInfoList,
+        final List<String> trackingInfoJobTaskIdList,
+        final List<Date> trackingInfoLastStatusCheckTimeList,
+        final List<Long> trackingInfoStatusCheckIntervalMillisList,
+        final List<String> trackingInfoStatusCheckUrlList,
+        final List<String> trackingInfoTrackingPipeList,
+        final List<String> trackingInfoTrackToList,
         final List<byte[]> sourceInfoList,
         final List<String> correlationIdList) throws Exception
     {
@@ -102,7 +118,12 @@ public final class DatabaseClient
                 taskStatusList,
                 contextList,
                 toList,
-                trackingInfoList,
+                trackingInfoJobTaskIdList,
+                trackingInfoLastStatusCheckTimeList,
+                trackingInfoStatusCheckIntervalMillisList,
+                trackingInfoStatusCheckUrlList,
+                trackingInfoTrackingPipeList,
+                trackingInfoTrackToList,
                 sourceInfoList,
                 correlationIdList);
             LOGGER.info("Successfully stowed {} task(s)", partitionIdList.size());

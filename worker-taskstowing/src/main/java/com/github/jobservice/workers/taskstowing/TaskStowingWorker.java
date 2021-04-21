@@ -90,7 +90,6 @@ public final class TaskStowingWorker implements Worker
             final byte[] contextBytes = workerTaskData.getContext() != null
                 ? workerTaskData.getContext()
                 : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap());
-            final byte[] trackingInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getTrackingInfo());
             final byte[] sourceInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getSourceInfo());
 
             databaseClient.insertStowedTask(
@@ -102,7 +101,12 @@ public final class TaskStowingWorker implements Worker
                 workerTaskData.getStatus().name(),
                 contextBytes,
                 workerTaskData.getTo(),
-                trackingInfoBytes,
+                trackingInfo.getJobTaskId(),
+                trackingInfo.getLastStatusCheckTime(),
+                trackingInfo.getStatusCheckIntervalMillis(),
+                trackingInfo.getStatusCheckUrl(),
+                trackingInfo.getTrackingPipe(),
+                trackingInfo.getTrackTo(),
                 sourceInfoBytes,
                 workerTaskData.getCorrelationId());
             return createSuccessResultNoOutputToQueue();

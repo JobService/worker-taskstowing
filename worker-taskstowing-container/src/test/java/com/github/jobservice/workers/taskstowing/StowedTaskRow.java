@@ -15,9 +15,10 @@
  */
 package com.github.jobservice.workers.taskstowing;
 
+import java.util.Date;
+
 final class StowedTaskRow
 {
-    private final Long id;
     private final String partitionId;
     private final String jobId;
     private final String taskClassifier;
@@ -26,12 +27,16 @@ final class StowedTaskRow
     private final String taskStatus;
     private final byte[] context;
     private final String to;
-    private final byte[] trackingInfo;
+    private final String trackingInfoJobTaskId;
+    private final Date trackingInfoLastStatusCheckTime;
+    private final Long trackingInfoStatusCheckIntervalMillis;
+    private final String trackingInfoStatusCheckUrl;
+    private final String trackingInfoTrackingPipe;
+    private final String trackingInfoTrackTo;
     private final byte[] sourceInfo;
     private final String correlationId;
 
     public StowedTaskRow(
-        final Long id,
         final String partitionId,
         final String jobId,
         final String taskClassifier,
@@ -40,11 +45,15 @@ final class StowedTaskRow
         final String taskStatus,
         final byte[] context,
         final String to,
-        final byte[] trackingInfo,
+        final String trackingInfoJobTaskId,
+        final Date trackingInfoLastStatusCheckTime,
+        final Long trackingInfoStatusCheckIntervalMillis,
+        final String trackingInfoStatusCheckUrl,
+        final String trackingInfoTrackingPipe,
+        final String trackingInfoTrackTo,
         final byte[] sourceInfo,
         final String correlationId)
     {
-        this.id = id;
         this.partitionId = partitionId;
         this.jobId = jobId;
         this.taskClassifier = taskClassifier;
@@ -53,14 +62,14 @@ final class StowedTaskRow
         this.taskStatus = taskStatus;
         this.context = context;
         this.to = to;
-        this.trackingInfo = trackingInfo;
+        this.trackingInfoLastStatusCheckTime = trackingInfoLastStatusCheckTime;
+        this.trackingInfoJobTaskId = trackingInfoJobTaskId;
+        this.trackingInfoStatusCheckIntervalMillis = trackingInfoStatusCheckIntervalMillis;
+        this.trackingInfoStatusCheckUrl = trackingInfoStatusCheckUrl;
+        this.trackingInfoTrackingPipe = trackingInfoTrackingPipe;
+        this.trackingInfoTrackTo = trackingInfoTrackTo;
         this.sourceInfo = sourceInfo;
         this.correlationId = correlationId;
-    }
-
-    public Long getId()
-    {
-        return id;
     }
 
     public String getPartitionId()
@@ -103,9 +112,34 @@ final class StowedTaskRow
         return to;
     }
 
-    public byte[] getTrackingInfo()
+    public String getTrackingInfoJobTaskId()
     {
-        return trackingInfo;
+        return trackingInfoJobTaskId;
+    }
+
+    public Date getTrackingInfoLastStatusCheckTime()
+    {
+        return trackingInfoLastStatusCheckTime;
+    }
+
+    public Long getTrackingInfoStatusCheckIntervalMillis()
+    {
+        return trackingInfoStatusCheckIntervalMillis;
+    }
+
+    public String getTrackingInfoStatusCheckUrl()
+    {
+        return trackingInfoStatusCheckUrl;
+    }
+
+    public String getTrackingInfoTrackingPipe()
+    {
+        return trackingInfoTrackingPipe;
+    }
+
+    public String getTrackingInfoTrackTo()
+    {
+        return trackingInfoTrackTo;
     }
 
     public byte[] getSourceInfo()

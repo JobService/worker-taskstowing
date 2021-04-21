@@ -26,7 +26,12 @@ public final class StowedTaskColumnName
     public static final String TASK_STATUS = "task_status";
     public static final String CONTEXT = "context";
     public static final String TO = "to";
-    public static final String TRACKING_INFO = "tracking_info";
+    public static final String TRACKING_INFO_JOB_TASK_ID = "tracking_info_job_task_id";
+    public static final String TRACKING_INFO_LAST_STATUS_CHECK_TIME = "tracking_info_last_status_check_time";
+    public static final String TRACKING_INFO_STATUS_CHECK_INTERVAL_MILLIS = "tracking_info_status_check_interval_millis";
+    public static final String TRACKING_INFO_STATUS_CHECK_URL = "tracking_info_status_check_url";
+    public static final String TRACKING_INFO_TRACKING_PIPE = "tracking_info_tracking_pipe";
+    public static final String TRACKING_INFO_TRACK_TO = "tracking_info_track_to";
     public static final String SOURCE_INFO = "source_info";
     public static final String CORRELATION_ID = "correlation_id";
 

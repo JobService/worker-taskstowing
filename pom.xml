@@ -71,7 +71,7 @@
     <scm>
         <connection>scm:git:https://github.com/JobService/worker-taskstowing.git</connection>
         <developerConnection>scm:git:https://github.com/JobService/worker-taskstowing.git</developerConnection>
-        <url>${gitRepo}</url>
+        <url>https://github.com/JobService/worker-taskstowing</url>
     </scm>
 
     <dependencyManagement>

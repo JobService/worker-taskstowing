@@ -1,22 +1,19 @@
 /*
  * Copyright 2021 Micro Focus or one of its affiliates.
  *
- * The only warranties for products and services of Micro Focus and its
- * affiliates and licensors ("Micro Focus") are set forth in the express
- * warranty statements accompanying such products and services. Nothing
- * herein should be construed as constituting an additional warranty.
- * Micro Focus shall not be liable for technical or editorial errors or
- * omissions contained herein. The information contained herein is subject
- * to change without notice.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Contains Confidential Information. Except as specifically indicated
- * otherwise, a valid license is required for possession, use or copying.
- * Consistent with FAR 12.211 and 12.212, Commercial Computer Software,
- * Computer Software Documentation, and Technical Data for Commercial
- * Items are licensed to the U.S. Government under vendor's standard
- * commercial license.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-package com.microfocus.caf.worker.taskstowing;
+package com.github.jobservice.workers.taskstowing;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,13 +21,13 @@ import com.google.common.base.Strings;
 import com.hpe.caf.api.Codec;
 import com.hpe.caf.api.worker.InvalidTaskException;
 import com.hpe.caf.api.worker.TaskRejectedException;
-import com.hpe.caf.api.worker.TaskStatus;
 import com.hpe.caf.api.worker.TrackingInfo;
 import com.hpe.caf.api.worker.Worker;
 import com.hpe.caf.api.worker.WorkerResponse;
 import com.hpe.caf.api.worker.WorkerTaskData;
 import com.hpe.caf.services.job.util.JobTaskId;
-import com.microfocus.caf.worker.taskstowing.database.DatabaseClient;
+import com.github.jobservice.workers.taskstowing.database.DatabaseClient;
+import com.github.jobservice.workers.taskstowing.database.DatabaseExceptionChecker;
 import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,18 +40,18 @@ public final class TaskStowingWorker implements Worker
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final WorkerTaskData workerTaskData;
-    private final String outputQueue;
+    private final String errorQueue;
     private final Codec codec;
     private final DatabaseClient databaseClient;
 
     public TaskStowingWorker(
         final WorkerTaskData workerTaskData,
-        final String outputQueue,
+        final String errorQueue,
         final Codec codec,
         final DatabaseClient databaseClient)
     {
         this.workerTaskData = workerTaskData;
-        this.outputQueue = outputQueue;
+        this.errorQueue = errorQueue;
         this.codec = codec;
         this.databaseClient = databaseClient;
     }
@@ -114,7 +111,11 @@ public final class TaskStowingWorker implements Worker
             return createFailureResult(TaskStowingWorkerFailure.FAILED_TO_SERIALIZE_TASK, jsonProcessingException);
         } catch (final Exception exception) {
             LOGGER.error(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
-            return createFailureResult(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
+            if (DatabaseExceptionChecker.isTransientException(exception)) {
+                throw new TaskRejectedException(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
+            } else {
+                return createFailureResult(TaskStowingWorkerFailure.FAILED_TO_WRITE_TO_DATABASE, exception);
+            }
         }
     }
 
@@ -133,13 +134,7 @@ public final class TaskStowingWorker implements Worker
     @Override
     public WorkerResponse getGeneralFailureResult(final Throwable t)
     {
-        return new WorkerResponse(
-            outputQueue,
-            TaskStatus.RESULT_EXCEPTION,
-            WorkerResponseFactory.getExceptionData(t, codec),
-            WORKER_IDENTIFIER,
-            WORKER_API_VERSION,
-            null);
+        return WorkerResponseFactory.createExceptionResult(errorQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, t);
     }
 
     private WorkerResponse createSuccessResultNoOutputToQueue()
@@ -149,11 +144,11 @@ public final class TaskStowingWorker implements Worker
 
     private WorkerResponse createFailureResult(final String failure)
     {
-        return WorkerResponseFactory.createFailureResult(outputQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure);
+        return WorkerResponseFactory.createFailureResult(errorQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure);
     }
 
     private WorkerResponse createFailureResult(final String failure, final Throwable cause)
     {
-        return WorkerResponseFactory.createFailureResult(outputQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure, cause);
+        return WorkerResponseFactory.createFailureResult(errorQueue, WORKER_IDENTIFIER, WORKER_API_VERSION, codec, failure, cause);
     }
 }

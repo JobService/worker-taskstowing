@@ -1,22 +1,19 @@
 /*
  * Copyright 2021 Micro Focus or one of its affiliates.
  *
- * The only warranties for products and services of Micro Focus and its
- * affiliates and licensors ("Micro Focus") are set forth in the express
- * warranty statements accompanying such products and services. Nothing
- * herein should be construed as constituting an additional warranty.
- * Micro Focus shall not be liable for technical or editorial errors or
- * omissions contained herein. The information contained herein is subject
- * to change without notice.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Contains Confidential Information. Except as specifically indicated
- * otherwise, a valid license is required for possession, use or copying.
- * Consistent with FAR 12.211 and 12.212, Commercial Computer Software,
- * Computer Software Documentation, and Technical Data for Commercial
- * Items are licensed to the U.S. Government under vendor's standard
- * commercial license.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-package com.microfocus.caf.worker.taskstowing;
+package com.github.jobservice.workers.taskstowing;
 
 import com.hpe.caf.api.Codec;
 import com.hpe.caf.api.CodecException;
@@ -35,13 +32,13 @@ final class WorkerResponseFactory
     {
     }
 
-    public static WorkerResponse createSuccessResultNoOutputToQueue(final String workerIdentifier, final int workerApiVersion)
+    static WorkerResponse createSuccessResultNoOutputToQueue(final String workerIdentifier, final int workerApiVersion)
     {
         return new WorkerResponse(null, TaskStatus.RESULT_SUCCESS, new byte[]{}, workerIdentifier, workerApiVersion, null);
     }
 
-    public static WorkerResponse createFailureResult(
-        final String outputQueue,
+    static WorkerResponse createFailureResult(
+        final String errorQueue,
         final String workerIdentifier,
         final int workerApiVersion,
         final Codec codec,
@@ -49,14 +46,14 @@ final class WorkerResponseFactory
     {
         try {
             byte[] data = codec.serialise(failure);
-            return new WorkerResponse(outputQueue, TaskStatus.RESULT_FAILURE, data, workerIdentifier, workerApiVersion, null);
+            return new WorkerResponse(errorQueue, TaskStatus.RESULT_FAILURE, data, workerIdentifier, workerApiVersion, null);
         } catch (final CodecException e) {
             throw new TaskFailedException("Failed to serialise result", e);
         }
     }
 
-    public static WorkerResponse createFailureResult(
-        final String outputQueue,
+    static WorkerResponse createFailureResult(
+        final String errorQueue,
         final String workerIdentifier,
         final int workerApiVersion,
         final Codec codec,
@@ -64,16 +61,32 @@ final class WorkerResponseFactory
         final Throwable cause)
     {
         final byte[] exceptionData = getExceptionData(new Exception(failure, cause), codec);
-        return new WorkerResponse(outputQueue, TaskStatus.RESULT_FAILURE, exceptionData, workerIdentifier, workerApiVersion, null);
+        return new WorkerResponse(errorQueue, TaskStatus.RESULT_FAILURE, exceptionData, workerIdentifier, workerApiVersion, null);
 
     }
 
-    public static byte[] getExceptionData(final Throwable t, final Codec codec)
+    static WorkerResponse createExceptionResult(
+        final String errorQueue,
+        final String workerIdentifier,
+        final int workerApiVersion,
+        final Codec codec,
+        final Throwable cause)
+    {
+        return new WorkerResponse(
+            errorQueue,
+            TaskStatus.RESULT_EXCEPTION,
+            WorkerResponseFactory.getExceptionData(cause, codec),
+            workerIdentifier,
+            workerApiVersion,
+            null);
+    }
+
+    static byte[] getExceptionData(final Throwable t, final Codec codec)
     {
         try {
-            String exceptionDetail = buildExceptionStackTrace(t);
+            final String exceptionDetail = buildExceptionStackTrace(t);
             return codec.serialise(exceptionDetail);
-        } catch (CodecException e) {
+        } catch (final CodecException e) {
             LOGGER.warn("Failed to serialise exception, continuing", e);
             return new byte[]{};
         }
@@ -82,7 +95,7 @@ final class WorkerResponseFactory
     private static String buildExceptionStackTrace(final Throwable e)
     {
         // Build up exception detail from stack trace
-        StringBuilder exceptionStackTrace = new StringBuilder(e.getClass() + " " + e.getMessage());
+        final StringBuilder exceptionStackTrace = new StringBuilder(e.getClass() + " " + e.getMessage());
         // Check if there is a stack trace on the exception before building it up into a string
         if (Objects.nonNull(e.getStackTrace())) {
             exceptionStackTrace.append(stackTraceToString(e.getStackTrace()));
@@ -101,9 +114,9 @@ final class WorkerResponseFactory
 
     private static String stackTraceToString(final StackTraceElement[] stackTraceElements)
     {
-        StringBuilder stackTraceStr = new StringBuilder();
+        final StringBuilder stackTraceStr = new StringBuilder();
         // From each stack trace element, build up the stack trace
-        for (StackTraceElement stackTraceElement : stackTraceElements) {
+        for (final StackTraceElement stackTraceElement : stackTraceElements) {
             stackTraceStr.append(" ").append(stackTraceElement.toString());
         }
         return stackTraceStr.toString();

@@ -1,27 +1,24 @@
 /*
  * Copyright 2021 Micro Focus or one of its affiliates.
  *
- * The only warranties for products and services of Micro Focus and its
- * affiliates and licensors ("Micro Focus") are set forth in the express
- * warranty statements accompanying such products and services. Nothing
- * herein should be construed as constituting an additional warranty.
- * Micro Focus shall not be liable for technical or editorial errors or
- * omissions contained herein. The information contained herein is subject
- * to change without notice.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Contains Confidential Information. Except as specifically indicated
- * otherwise, a valid license is required for possession, use or copying.
- * Consistent with FAR 12.211 and 12.212, Commercial Computer Software,
- * Computer Software Documentation, and Technical Data for Commercial
- * Items are licensed to the U.S. Government under vendor's standard
- * commercial license.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-package com.microfocus.caf.worker.taskstowing;
+package com.github.jobservice.workers.taskstowing;
 
 import java.util.List;
 import org.jdbi.v3.core.Jdbi;
 import org.testng.Assert;
-import static com.microfocus.caf.worker.taskstowing.IntegrationTestSystemProperties.*;
+import static com.github.jobservice.workers.taskstowing.IntegrationTestSystemProperties.*;
 
 final class IntegrationTestDatabaseClient
 {
@@ -42,8 +39,9 @@ final class IntegrationTestDatabaseClient
             Thread.sleep(500);
             long remaining = deadline - System.currentTimeMillis();
             if (remaining < 0) {
-                Assert.fail("Timed out out after " + timeoutMillis + " milliseconds waiting on " + DATABASE_TABLE_NAME + " to contain "
-                    + expectedNumberOfStowedTasks + " stowed tasks. Actual number of stowed tasks is: " + stowedTasks.size());
+                Assert.fail("Timed out out after " + timeoutMillis + " milliseconds waiting on the " + DATABASE_TABLE_NAME
+                    + " table to contain " + expectedNumberOfStowedTasks + " stowed tasks. Actual number of stowed tasks is: "
+                    + stowedTasks.size());
             }
             stowedTasks = getStowedTasks();
         }

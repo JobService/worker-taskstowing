@@ -1,22 +1,19 @@
 /*
  * Copyright 2021 Micro Focus or one of its affiliates.
  *
- * The only warranties for products and services of Micro Focus and its
- * affiliates and licensors ("Micro Focus") are set forth in the express
- * warranty statements accompanying such products and services. Nothing
- * herein should be construed as constituting an additional warranty.
- * Micro Focus shall not be liable for technical or editorial errors or
- * omissions contained herein. The information contained herein is subject
- * to change without notice.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Contains Confidential Information. Except as specifically indicated
- * otherwise, a valid license is required for possession, use or copying.
- * Consistent with FAR 12.211 and 12.212, Commercial Computer Software,
- * Computer Software Documentation, and Technical Data for Commercial
- * Items are licensed to the U.S. Government under vendor's standard
- * commercial license.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-package com.microfocus.caf.worker.taskstowing;
+package com.github.jobservice.workers.taskstowing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +40,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.microfocus.caf.worker.taskstowing.IntegrationTestSystemProperties.*;
+import static com.github.jobservice.workers.taskstowing.IntegrationTestSystemProperties.*;
 import static com.fasterxml.jackson.databind.DeserializationFeature.*;
 import com.hpe.caf.api.worker.JobStatus;
 import java.time.LocalDate;
@@ -340,10 +337,10 @@ public class TaskStowingWorkerIT
         queueServices.startListening();
         queueServices.sendTaskMessage(taskMessage);
 
-        // Then the worker should have sent the message to it's output queue
-        queueServices.waitForOutputQueueMessages(1, 30000);
-        assertEquals("Expected 1 message to have been sent to the worker's output queue", 1,
-                     queueServices.getOutputQueueMessages().size());
+        // Then the worker should have sent the message to it's error queue
+        queueServices.waitForErrorQueueMessages(1, 30000);
+        assertEquals("Expected 1 message to have been sent to the worker's error queue", 1,
+                     queueServices.getErrorQueueMessages().size());
 
         // and the worker should NOT have stowed the task message in the database
         final List<StowedTaskRow> stowedTaskRows = integrationTestDatabaseClient.getStowedTasks();
@@ -381,10 +378,10 @@ public class TaskStowingWorkerIT
         queueServices.startListening();
         queueServices.sendTaskMessage(taskMessage);
 
-        // Then the worker should have sent the message to it's output queue
-        queueServices.waitForOutputQueueMessages(1, 30000);
-        assertEquals("Expected 1 message to have been sent to the worker's output queue", 1,
-                     queueServices.getOutputQueueMessages().size());
+        // Then the worker should have sent the message to it's error queue
+        queueServices.waitForErrorQueueMessages(1, 30000);
+        assertEquals("Expected 1 message to have been sent to the worker's error queue", 1,
+                     queueServices.getErrorQueueMessages().size());
 
         // and the worker should NOT have stowed the task message in the database
         final List<StowedTaskRow> stowedTaskRows = integrationTestDatabaseClient.getStowedTasks();
@@ -422,10 +419,10 @@ public class TaskStowingWorkerIT
         queueServices.startListening();
         queueServices.sendTaskMessage(taskMessage);
 
-        // Then the worker should have sent the message to it's output queue
-        queueServices.waitForOutputQueueMessages(1, 30000);
-        assertEquals("Expected 1 message to have been sent to the worker's output queue", 1,
-                     queueServices.getOutputQueueMessages().size());
+        // Then the worker should have sent the message to it's error queue
+        queueServices.waitForErrorQueueMessages(1, 30000);
+        assertEquals("Expected 1 message to have been sent to the worker's error queue", 1,
+                     queueServices.getErrorQueueMessages().size());
 
         // and the worker should NOT have stowed the task message in the database
         final List<StowedTaskRow> stowedTaskRows = integrationTestDatabaseClient.getStowedTasks();

@@ -1,1 +1,1 @@
-com.microfocus.caf.worker.taskstowing.factory.TaskStowingWorkerFactoryProvider
+com.github.jobservice.workers.taskstowing.factory.TaskStowingWorkerFactoryProvider

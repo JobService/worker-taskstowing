@@ -19,6 +19,8 @@ import com.google.common.collect.Lists;
 import java.sql.SQLException;
 import java.sql.SQLTransientException;
 import java.util.List;
+import org.jdbi.v3.core.ConnectionException;
+import org.jdbi.v3.core.JdbiException;
 
 public final class DatabaseExceptionChecker
 {
@@ -47,16 +49,18 @@ public final class DatabaseExceptionChecker
 
     public static boolean isTransientException(final Exception exception)
     {
-        if (exception instanceof SQLTransientException) {
+        final Throwable unwrappedException = (exception instanceof JdbiException) ? exception.getCause() : exception;
+
+        if (unwrappedException instanceof SQLTransientException) {
             return true;
         }
 
-        if (exception instanceof SQLException) {
+        if (!(unwrappedException instanceof SQLException)) {
             return false;
         }
 
-        return isSqlStatePrefixedWith(((SQLException) exception), TRANSIENT_ERROR_CLASSES)
-            || isSqlStateEqualTo(((SQLException) exception), TRANSIENT_ERROR_CODES);
+        return isSqlStatePrefixedWith(((SQLException) unwrappedException), TRANSIENT_ERROR_CLASSES)
+            || isSqlStateEqualTo(((SQLException) unwrappedException), TRANSIENT_ERROR_CODES);
     }
 
     private static boolean isSqlStatePrefixedWith(final SQLException exception, final List<String> errorClasses)

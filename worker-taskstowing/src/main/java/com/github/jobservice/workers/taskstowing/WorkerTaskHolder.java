@@ -17,7 +17,6 @@ package com.github.jobservice.workers.taskstowing;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jobservice.workers.taskstowing.factory.TaskStowingWorkerFactory;
 import com.google.common.base.Strings;
 import com.hpe.caf.api.Codec;
 import com.hpe.caf.api.worker.TrackingInfo;
@@ -32,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 public final class WorkerTaskHolder
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TaskStowingWorkerFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkerTaskHolder.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final String errorQueue;

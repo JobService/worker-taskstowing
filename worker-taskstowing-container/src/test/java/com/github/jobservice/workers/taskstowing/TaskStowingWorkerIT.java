@@ -82,6 +82,7 @@ public class TaskStowingWorkerIT
     @BeforeMethod
     public void setUpTest(Method method) throws Exception
     {
+        System.out.println("RORY " + PAUSED_JOB_STATUS_CHECK_URL);
         LOGGER.info("Starting: {}", method.getName());
         queueServices = new QueueServices();
     }

@@ -17,6 +17,7 @@ package com.github.jobservice.workers.taskstowing.database;
 
 import com.github.jobservice.workers.taskstowing.factory.TaskStowingWorkerConfiguration;
 import com.zaxxer.hikari.HikariDataSource;
+import org.postgresql.PGProperty;
 
 final class HikariDataSourceFactory
 {
@@ -24,15 +25,13 @@ final class HikariDataSourceFactory
     {
         final HikariDataSource hikariDataSource = new HikariDataSource();
 
-        final String jdbcUrl = String.format(
-            "jdbc:postgresql://%s:%s/%s?ApplicationName=%s",
-            configuration.getDatabaseHost(),
-            configuration.getDatabasePort(),
-            configuration.getDatabaseName(),
-            configuration.getDatabaseAppName());
-        hikariDataSource.setJdbcUrl(jdbcUrl);
-        hikariDataSource.setUsername(configuration.getDatabaseUsername());
-        hikariDataSource.setPassword(configuration.getDatabasePassword());
+        hikariDataSource.setJdbcUrl("jdbc:postgresql:");
+        hikariDataSource.addDataSourceProperty(PGProperty.PG_HOST.getName(), configuration.getDatabaseHost());
+        hikariDataSource.addDataSourceProperty(PGProperty.PG_PORT.getName(), configuration.getDatabasePort());
+        hikariDataSource.addDataSourceProperty(PGProperty.PG_DBNAME.getName(), configuration.getDatabaseName());
+        hikariDataSource.addDataSourceProperty(PGProperty.APPLICATION_NAME.getName(), configuration.getDatabaseAppName());
+        hikariDataSource.addDataSourceProperty(PGProperty.USER.getName(), configuration.getDatabaseUsername());
+        hikariDataSource.addDataSourceProperty(PGProperty.PASSWORD.getName(), configuration.getDatabasePassword());
         hikariDataSource.setMaximumPoolSize(configuration.getDatabaseMaximumPoolSize());
 
         return hikariDataSource;

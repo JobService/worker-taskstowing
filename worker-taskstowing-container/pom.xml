@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2021 Micro Focus or one of its affiliates.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.jobservice.workers.taskstowing</groupId>
+    <artifactId>worker-taskstowing-container</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>com.github.jobservice.workers.taskstowing</groupId>
+        <artifactId>worker-taskstowing-aggregator</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <maven.install.skip>true</maven.install.skip>
+        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+        <database.name>postgres</database.name>
+        <database.tablename>stowed_task</database.tablename>
+        <database.username>postgres</database.username>
+        <database.password>postgres</database.password>
+        <database.appname>worker-taskstowing</database.appname>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.workerframework</groupId>
+            <artifactId>standard-worker-container</artifactId>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>com.github.jobservice.workers.taskstowing</groupId>
+            <artifactId>worker-taskstowing</artifactId>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>com.github.cafdataprocessing</groupId>
+            <artifactId>worker-document</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Unpack the base worker configuration files -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>process-config-files</id>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.github.workerframework</groupId>
+                                    <artifactId>worker-default-configs</artifactId>
+                                    <outputDirectory>${project.build.directory}/config-files</outputDirectory>
+                                    <excludes>META-INF/**</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Process the local configuration files -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>process-config-files</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/config-files</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/config</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-test-properties</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/test/resources</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Compile the test source files -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Run the integration tests in the integration-test phase -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <docker.host.address>${docker.host.address}</docker.host.address>
+                        <worker.adminport>${worker.adminport}</worker.adminport>
+                        <rabbitmq.node.port>${rabbitmq.node.port}</rabbitmq.node.port>
+                        <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
+                        <mock.service.port>${mock.service.port}</mock.service.port>
+                        <datastore.enabled>false</datastore.enabled>
+                        <database.port>${database.port}</database.port>
+                        <database.name>${database.name}</database.name>
+                        <database.tablename>${database.tablename}</database.tablename>
+                        <database.username>${database.username}</database.username>
+                        <database.password>${database.password}</database.password>
+                        <database.appname>${database.appname}</database.appname>
+                    </systemPropertyVariables>
+                    <environmentVariables>
+                        <CAF_APPNAME>caf/worker</CAF_APPNAME>
+                        <CAF_CONFIG_PATH>${project.build.directory}/config-files</CAF_CONFIG_PATH>
+                        <CAF_CONFIG_DECODER>JavascriptDecoder</CAF_CONFIG_DECODER>
+                        <CAF_CONFIG_ENABLE_SUBSTITUTOR>false</CAF_CONFIG_ENABLE_SUBSTITUTOR>
+                        <CAF_WORKER_DATASTORE_PATH>datastore</CAF_WORKER_DATASTORE_PATH>
+                        <CAF_RABBITMQ_PREFETCH_BUFFER>1000</CAF_RABBITMQ_PREFETCH_BUFFER>
+                        <CAF_WORKER_RETRY_LIMIT>2</CAF_WORKER_RETRY_LIMIT>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+
+            <!--
+                Builds the Docker image for the ElasticQueryWorker, starts RabbitMQ and assembles the configuration files
+                for running the integration tests.
+            -->
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <executions>
+                    <!-- Build the container in compile phase -->
+                    <execution>
+                        <id>build-docker-container</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                    <!-- Start the containers in pre-integration-test phase -->
+                    <execution>
+                        <id>start</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <!-- Stop the containers in post-integration-test phase -->
+                    <execution>
+                        <id>stop</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                    <!-- Push the docker image for the worker to the registry in deploy phase -->
+                    <execution>
+                        <id>upload-docker-container</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
+                        <configuration>
+                            <filter>worker-taskstowing</filter>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <watchInterval>500</watchInterval>
+                    <logDate>default</logDate>
+                    <verbose>true</verbose>
+                    <images>
+                        <!-- WebDav -->
+                        <image>
+                            <alias>webdav</alias>
+                            <name>${dockerHubPublic}/cloudesire/webdav</name>
+                            <run>
+                                <volumes>
+                                    <bind>
+                                        <volume>/srv/common/webdav</volume>
+                                    </bind>
+                                </volumes>
+                                <ports>
+                                    <port>${webdav.apache.port}:8080</port>
+                                </ports>
+                                <env>
+                                    <APACHE_PORT>8080</APACHE_PORT>
+                                </env>
+                                <wait>
+                                    <log>WebDAV Server startup complete</log>
+                                    <http>
+                                        <url>http://${docker.host.address}:${webdav.apache.port}</url>
+                                    </http>
+                                    <time>120000</time>
+                                    <shutdown>500</shutdown>
+                                </wait>
+                                <log>
+                                    <enabled>true</enabled>
+                                </log>
+                            </run>
+                        </image>
+
+                        <!-- Run the RabbitMQ image -->
+                        <image>
+                            <alias>rabbitmq</alias>
+                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
+                            <run>
+                                <ports>
+                                    <port>${rabbitmq.ctrl.port}:15672</port>
+                                    <port>${rabbitmq.node.port}:5672</port>
+                                </ports>
+                                <wait>
+                                    <log>Server startup complete</log>
+                                    <http>
+                                        <url>http://${docker.host.address}:${rabbitmq.ctrl.port}</url>
+                                    </http>
+                                    <time>120000</time>
+                                    <shutdown>500</shutdown>
+                                </wait>
+                                <log>
+                                    <enabled>true</enabled>
+                                </log>
+                            </run>
+                        </image>
+
+                        <!-- Run the Postgres image --> 
+                        <image>
+                            <alias>postgres</alias>
+                            <name>worker-taskstowing-postgres:${project.version}</name>
+                            <build>
+                                <from>${dockerHubPublic}/library/postgres:11</from>
+                                <assembly>
+                                    <mode>dir</mode>
+                                    <targetDir>/docker-entrypoint-initdb.d</targetDir>
+                                    <inline>
+                                        <files>
+                                            <file>
+                                                <source>src/test/resources/setup-postgres.sql</source>
+                                            </file>
+                                        </files>
+                                    </inline>
+                                </assembly>
+                            </build>
+                            <run>
+                                <ports>
+                                    <port>${database.port}:5432</port>
+                                </ports>
+                                <env>
+                                    <POSTGRES_USER>${database.username}</POSTGRES_USER>
+                                    <POSTGRES_PASSWORD>${database.password}</POSTGRES_PASSWORD>
+                                </env>
+                                <wait>
+                                    <log>PostgreSQL init process complete</log>
+                                    <time>10000</time>
+                                    <shutdown>500</shutdown>
+                                </wait>
+                                <log>
+                                    <enabled>true</enabled>
+                                </log>
+                            </run>
+                        </image>
+
+                        <!-- Run a mock service to control what the statusCheckUrl returns during tests. -->
+                        <image>
+                            <alias>mock.service</alias>
+                            <name>${dockerHubPublic}/jamesdbloom/mockserver:mockserver-5.11.2</name>
+                            <run>
+                                <ports>
+                                    <port>${mock.service.port}:1080</port>
+                                </ports>
+                            </run>
+                        </image>
+
+                        <!-- Run the Task Stowing Worker image -->
+                        <image>
+                            <alias>worker-taskstowing</alias>
+                            <name>${dockerJobServiceOrg}worker-taskstowing${dockerProjectVersion}</name>
+                            <build>
+                                <from>${dockerHubPublic}/cafapi/opensuse-jre11:3</from>
+                                <cmd>
+                                    <exec>
+                                        <args>/maven/worker.sh</args>
+                                    </exec>
+                                </cmd>
+                                <healthCheck>
+                                    <cmd>curl -f http://localhost:8081/healthcheck || exit 1</cmd>
+                                </healthCheck>
+                                <assembly>
+                                    <mode>tar</mode>
+                                    <basedir>/</basedir>
+                                    <inline>
+                                        <!-- Including the executable worker.sh and worker.yaml files in the docker tar -->
+                                        <fileSets>
+                                            <fileSet>
+                                                <outputDirectory>maven</outputDirectory>
+                                                <lineEnding>unix</lineEnding>
+                                                <includes>
+                                                    <include>worker.sh</include>
+                                                </includes>
+                                                <fileMode>0755</fileMode>
+                                            </fileSet>
+                                            <fileSet>
+                                                <outputDirectory>maven</outputDirectory>
+                                                <lineEnding>unix</lineEnding>
+                                                <includes>
+                                                    <include>worker.yaml</include>
+                                                </includes>
+                                            </fileSet>
+                                            <fileSet>
+                                                <directory>${project.build.directory}/config-files</directory>
+                                                <outputDirectory>maven/config</outputDirectory>
+                                            </fileSet>
+                                            <fileSet>
+                                                <directory>src/main/scripts</directory>
+                                                <outputDirectory>scripts</outputDirectory>
+                                                <lineEnding>unix</lineEnding>
+                                                <fileMode>0755</fileMode>
+                                            </fileSet>
+                                        </fileSets>
+                                        <!-- Including the dependencies into the docker tar -->
+                                        <dependencySets>
+                                            <dependencySet>
+                                                <outputDirectory>maven</outputDirectory>
+                                                <useProjectArtifact>false</useProjectArtifact>
+                                                <scope>runtime</scope>
+                                            </dependencySet>
+                                        </dependencySets>
+                                    </inline>
+                                </assembly>
+                                <env>
+                                    <CAF_WORKER_INPUT_QUEUE>worker-taskstowing-in</CAF_WORKER_INPUT_QUEUE>
+                                    <CAF_WORKER_OUTPUT_QUEUE>worker-taskstowing-out</CAF_WORKER_OUTPUT_QUEUE>
+                                    <CAF_WORKER_FAILURE_QUEUE>worker-taskstowing-err</CAF_WORKER_FAILURE_QUEUE>
+                                </env>
+                            </build>
+                            <run>
+                                <ports>
+                                    <port>${worker.adminport}:8081</port>
+                                </ports>
+                                <env>
+                                    <CAF_WORKER_DATASTORE_PATH>/srv/common/webdav</CAF_WORKER_DATASTORE_PATH>
+                                    <CAF_RABBITMQ_PREFETCH_BUFFER>1000</CAF_RABBITMQ_PREFETCH_BUFFER>
+                                    <CAF_WORKER_RETRY_LIMIT>2</CAF_WORKER_RETRY_LIMIT>
+                                    <CAF_WORKER_MAX_BATCH_SIZE>1</CAF_WORKER_MAX_BATCH_SIZE>
+                                    <CAF_WORKER_MAX_BATCH_TIME>10000</CAF_WORKER_MAX_BATCH_TIME>
+                                    <CAF_WORKER_TASKSTOWING_DATABASE_HOST>postgres</CAF_WORKER_TASKSTOWING_DATABASE_HOST>
+                                    <CAF_WORKER_TASKSTOWING_DATABASE_PORT>5432</CAF_WORKER_TASKSTOWING_DATABASE_PORT>
+                                    <CAF_WORKER_TASKSTOWING_DATABASE_NAME>${database.name}</CAF_WORKER_TASKSTOWING_DATABASE_NAME>
+                                    <CAF_WORKER_TASKSTOWING_DATABASE_TABLENAME>${database.tablename}</CAF_WORKER_TASKSTOWING_DATABASE_TABLENAME>
+                                    <CAF_WORKER_TASKSTOWING_DATABASE_USERNAME>${database.username}</CAF_WORKER_TASKSTOWING_DATABASE_USERNAME>
+                                    <CAF_WORKER_TASKSTOWING_DATABASE_PASSWORD>${database.password}</CAF_WORKER_TASKSTOWING_DATABASE_PASSWORD>
+                                    <CAF_WORKER_TASKSTOWING_DATABASE_APPNAME>${database.appname}</CAF_WORKER_TASKSTOWING_DATABASE_APPNAME>
+                                </env>
+                                <volumes>
+                                    <from>
+                                        <image>webdav</image>
+                                    </from>
+                                </volumes>
+                                <links>
+                                    <link>rabbitmq</link>
+                                    <link>postgres</link>
+                                    <link>mock.service</link>
+                                </links>
+                                <log>
+                                    <enabled>true</enabled>
+                                </log>
+                                <wait>
+                                    <http>
+                                        <url>http://${docker.host.address}:${worker.adminport}/healthcheck</url>
+                                    </http>
+                                    <time>120000</time>
+                                    <shutdown>500</shutdown>
+                                </wait>
+                            </run>
+                        </image>
+                    </images>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Use this profile if your virtual machine setup must use fixed ports. -->
+    <profiles>
+        <profile>
+            <id>use-default-fixed-ports</id>
+            <properties>
+                <rabbitmq.ctrl.port>15672</rabbitmq.ctrl.port>
+                <rabbitmq.node.port>5672</rabbitmq.node.port>
+                <worker.adminport>8081</worker.adminport>
+                <webdav.apache.port>9090</webdav.apache.port>
+                <database.port>25432</database.port>
+                <database.port>25432</database.port>
+                <mock.service.port>1080</mock.service.port>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

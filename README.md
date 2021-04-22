@@ -25,15 +25,13 @@ The Task Stowing Worker is used to stow tasks received on it's input queue to a 
     **Description**: The name of the PostgreSQL database table in which to stow task messages.
 
 * `CAF_WORKER_TASKSTOWING_DATABASE_USERNAME`  
-    **Default**: `postgres`  
     **Description**: The username to use when establishing the connection to the PostgreSQL server.
 
 * `CAF_WORKER_TASKSTOWING_DATABASE_PASSWORD`  
-    **Default**: `postgres`  
     **Description**: The password to use when establishing the connection to the PostgreSQL server.
 
 * `CAF_WORKER_TASKSTOWING_DATABASE_APPNAME`  
-    **Default**: `worker_taskstowing`  
+    **Default**: `worker-taskstowing`  
     **Description**: The application name used for PostgreSQL logging and monitoring.
 
 * `CAF_WORKER_TASKSTOWING_DATABASE_MAXIMUM_POOL_SIZE`  

@@ -22,7 +22,6 @@ import com.github.jobservice.workers.taskstowing.database.DatabaseClient;
 import com.github.jobservice.workers.taskstowing.database.DatabaseExceptionChecker;
 import com.hpe.caf.api.worker.TaskRejectedException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

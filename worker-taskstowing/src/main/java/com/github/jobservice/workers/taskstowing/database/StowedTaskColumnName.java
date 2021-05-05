@@ -24,7 +24,6 @@ public final class StowedTaskColumnName
     public static final String TASK_API_VERSION = "task_api_version";
     public static final String TASK_DATA = "task_data";
     public static final String TASK_STATUS = "task_status";
-    public static final String CONTEXT = "context";
     public static final String TO = "to";
     public static final String TRACKING_INFO_JOB_TASK_ID = "tracking_info_job_task_id";
     public static final String TRACKING_INFO_LAST_STATUS_CHECK_TIME = "tracking_info_last_status_check_time";

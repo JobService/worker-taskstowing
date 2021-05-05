@@ -60,7 +60,6 @@ public final class TaskStowingBulkWorker
                                        workerTaskHolder.getTaskApiVersionList(),
                                        workerTaskHolder.getTaskDataList(),
                                        workerTaskHolder.getTaskStatusList(),
-                                       workerTaskHolder.getContextList(),
                                        workerTaskHolder.getToList(),
                                        workerTaskHolder.getTrackingInfoJobTaskIdList(),
                                        workerTaskHolder.getTrackingInfoLastStatusCheckTimeList(),
@@ -86,7 +85,6 @@ public final class TaskStowingBulkWorker
                 workerTaskHolder.getTaskApiVersionList(),
                 workerTaskHolder.getTaskDataList(),
                 workerTaskHolder.getTaskStatusList(),
-                workerTaskHolder.getContextList(),
                 workerTaskHolder.getToList(),
                 workerTaskHolder.getTrackingInfoJobTaskIdList(),
                 workerTaskHolder.getTrackingInfoLastStatusCheckTimeList(),
@@ -137,7 +135,6 @@ public final class TaskStowingBulkWorker
         final List<Integer> taskApiVersionList,
         final List<byte[]> taskDataList,
         final List<String> taskStatusList,
-        final List<byte[]> contextList,
         final List<String> toList,
         final List<String> trackingInfoJobTaskIdList,
         final List<Long> trackingInfoLastStatusCheckTimeList,
@@ -156,7 +153,6 @@ public final class TaskStowingBulkWorker
         lists.add(taskApiVersionList);
         lists.add(taskDataList);
         lists.add(taskStatusList);
-        lists.add(contextList);
         lists.add(toList);
         lists.add(trackingInfoJobTaskIdList);
         lists.add(trackingInfoLastStatusCheckTimeList);

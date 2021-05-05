@@ -28,7 +28,6 @@ import com.hpe.caf.api.worker.WorkerTaskData;
 import com.hpe.caf.services.job.util.JobTaskId;
 import com.github.jobservice.workers.taskstowing.database.DatabaseClient;
 import com.github.jobservice.workers.taskstowing.database.DatabaseExceptionChecker;
-import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,14 +83,6 @@ public final class TaskStowingWorker implements Worker
         }
 
         try {
-            // workerTask.getContext() should not be null, but it's possible if a worker is passed a message with a context map that
-            // has a key that is not the same as the servicePath, in which case the Worker Framework will pass a null context:
-            // https://github.com/WorkerFramework/worker-framework/blob/develop/worker-core/src/main/java/com/hpe/caf/worker/core/WorkerTaskImpl.java#L124
-            final byte[] contextBytes = workerTaskData.getContext() != null
-                ? workerTaskData.getContext()
-                : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap());
-            final byte[] sourceInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getSourceInfo());
-
             databaseClient.insertStowedTask(
                 partitionId,
                 jobId,
@@ -99,7 +90,6 @@ public final class TaskStowingWorker implements Worker
                 workerTaskData.getVersion(),
                 workerTaskData.getData(),
                 workerTaskData.getStatus().name(),
-                contextBytes,
                 workerTaskData.getTo(),
                 trackingInfo.getJobTaskId(),
                 trackingInfo.getLastStatusCheckTime().getTime(),
@@ -107,7 +97,7 @@ public final class TaskStowingWorker implements Worker
                 trackingInfo.getStatusCheckUrl(),
                 trackingInfo.getTrackingPipe(),
                 trackingInfo.getTrackTo(),
-                sourceInfoBytes,
+                OBJECT_MAPPER.writeValueAsBytes(workerTaskData.getSourceInfo()),
                 workerTaskData.getCorrelationId());
             return createSuccessResultNoOutputToQueue();
         } catch (final JsonProcessingException jsonProcessingException) {

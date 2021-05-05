@@ -11,7 +11,6 @@ CREATE TABLE public.stowed_task (
   task_api_version int4 NOT NULL,
   task_data bytea NOT NULL,
   task_status varchar(255) NOT NULL,
-  context bytea NOT NULL,
   "to" varchar(255) NOT NULL,
   tracking_info_job_task_id varchar(255) NOT NULL,
   tracking_info_last_status_check_time bigint NULL,
@@ -23,4 +22,5 @@ CREATE TABLE public.stowed_task (
   correlation_id varchar(255) NULL
 --   CONSTRAINT fk_stowed_task FOREIGN KEY (partition_id, job_id) REFERENCES job(partition_id, job_id)
 );
-CREATE INDEX idx_partition_id_and_job_id ON public.stowed_task USING btree (partition_id, job_id);
+CREATE INDEX idx_partition_id_and_job_id_and_tracking_info_job_task_id ON public.stowed_task USING btree
+(partition_id, job_id, tracking_info_job_task_id);

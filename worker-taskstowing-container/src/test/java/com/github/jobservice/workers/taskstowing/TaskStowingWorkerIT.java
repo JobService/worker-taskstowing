@@ -15,6 +15,7 @@
  */
 package com.github.jobservice.workers.taskstowing;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.hpe.caf.api.worker.TaskMessage;
@@ -108,21 +109,13 @@ public class TaskStowingWorkerIT
         final DocumentWorkerDocumentTask documentWorkerDocumentTask = new DocumentWorkerDocumentTask();
         documentWorkerDocumentTask.document = createSampleDocument();
 
-        // The context key must be set to the servicePath of the worker (which is caf/worker), otherwise the context won't be passed to
-        // the worker:
-        // https://github.com/WorkerFramework/worker-framework/blob/develop/worker-core/src/main/java/com/hpe/caf/worker/core/WorkerTaskImpl.java#L124
-        final Map<String, byte[]> context =  new HashMap<>();
-        final Map<String, String> contextContents = new HashMap<>();
-        contextContents.put("a-context-key", "a-context-value");
-        context.put("caf/worker", OBJECT_MAPPER.writeValueAsBytes(contextContents));
-
         final TaskMessage taskMessage = new TaskMessage(
             UUID.randomUUID().toString(),
             "DocumentWorkerTask",
             2,
             OBJECT_MAPPER.writeValueAsBytes(documentWorkerDocumentTask),
             TaskStatus.NEW_TASK,
-            context,
+            Collections.<String, byte[]>emptyMap(),
             DATA_PROCESSING_ELASTICQUERY_IN_QUEUE,
             trackingInfo,
             new TaskSourceInfo("agent1", "1.0"),
@@ -153,11 +146,6 @@ public class TaskStowingWorkerIT
                      "1", taskDataFromDatabase.document.reference);
         assertEquals("Unexpected value in database for task_data.document.fields.TENANT",
                      "acme", taskDataFromDatabase.document.fields.get("TENANT").get(0).data);
-
-        // context
-        final Map<String, byte[]> contextFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getContext(), Map.class);
-        assertEquals("Unexpected size of context in database", 1, contextFromDatabase.size());
-        assertEquals("Unexpected value of a-context-key in database", "a-context-value", contextFromDatabase.get("a-context-key"));
 
         // tracking_info
         assertEquals("Unexpected value in database for tracking_info.jobTaskId",
@@ -226,17 +214,17 @@ public class TaskStowingWorkerIT
         assertEquals("Unexpected value in database for correlation_id", "123", stowedTaskRow.getCorrelationId());
 
         // task_data
+        final TypeReference<Map<String, String>> taskDataTypeReference
+            = new TypeReference<Map<String, String>>()
+        {
+        };
         final Map<String, String> taskDataFromDatabase
-            = OBJECT_MAPPER.readValue(stowedTaskRow.getTaskData(), Map.class);
+            = OBJECT_MAPPER.readValue(stowedTaskRow.getTaskData(), taskDataTypeReference);
         assertNotNull("task_data value in database should not be null", taskDataFromDatabase);
         assertTrue("task_data value in database should be an object containing the key: someTaskDataKey",
                    taskDataFromDatabase.containsKey("someTaskDataKey"));
         assertEquals("Unexpected value in database for task_data.someTaskDataKey",
                      "someTaskDataValue", taskDataFromDatabase.get("someTaskDataKey"));
-
-        // context
-        final Map<String, byte[]> contextFromDatabase = OBJECT_MAPPER.readValue(stowedTaskRow.getContext(), Map.class);
-        assertEquals("Unexpected value in database for context", 0, contextFromDatabase.size());
 
         // tracking_info
         assertEquals("Unexpected value in database for tracking_info.jobTaskId",

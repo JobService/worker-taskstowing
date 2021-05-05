@@ -23,7 +23,6 @@ final class StowedTaskRow
     private final int taskApiVersion;
     private final byte[] taskData;
     private final String taskStatus;
-    private final byte[] context;
     private final String to;
     private final String trackingInfoJobTaskId;
     private final Long trackingInfoLastStatusCheckTime;
@@ -41,7 +40,6 @@ final class StowedTaskRow
         final int taskApiVersion,
         final byte[] taskData,
         final String taskStatus,
-        final byte[] context,
         final String to,
         final String trackingInfoJobTaskId,
         final Long trackingInfoLastStatusCheckTime,
@@ -58,7 +56,6 @@ final class StowedTaskRow
         this.taskApiVersion = taskApiVersion;
         this.taskData = taskData;
         this.taskStatus = taskStatus;
-        this.context = context;
         this.to = to;
         this.trackingInfoLastStatusCheckTime = trackingInfoLastStatusCheckTime;
         this.trackingInfoJobTaskId = trackingInfoJobTaskId;
@@ -98,11 +95,6 @@ final class StowedTaskRow
     public String getTaskStatus()
     {
         return taskStatus;
-    }
-
-    public byte[] getContext()
-    {
-        return context;
     }
 
     public String getTo()

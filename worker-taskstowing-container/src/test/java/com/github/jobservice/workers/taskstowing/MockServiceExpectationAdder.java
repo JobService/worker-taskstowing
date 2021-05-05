@@ -34,7 +34,7 @@ final class MockServiceExpectationAdder
         throws IOException, InterruptedException
     {
         final String expectationJson = GSON.toJson(mockServiceExpection);
-        final RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), expectationJson);
+        final RequestBody body = RequestBody.create(expectationJson, MediaType.get("application/json; charset=utf-8"));
         final Request request = new Request.Builder().url(EXPECTATION_URL).put(body).build();
         try (final Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
             if (response.code() != 201) {

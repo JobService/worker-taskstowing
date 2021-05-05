@@ -44,7 +44,6 @@ public final class WorkerTaskHolder
     private final List<Integer> taskApiVersionList;
     private final List<byte[]> taskDataList;
     private final List<String> taskStatusList;
-    private final List<byte[]> contextList;
     private final List<String> toList;
     private final List<String> trackingInfoJobTaskIdList;
     private final List<Long> trackingInfoLastStatusCheckTimeList;
@@ -67,7 +66,6 @@ public final class WorkerTaskHolder
         this.taskApiVersionList = new ArrayList<>();
         this.taskDataList = new ArrayList<>();
         this.taskStatusList = new ArrayList<>();
-        this.contextList = new ArrayList<>();
         this.toList = new ArrayList<>();
         this.trackingInfoJobTaskIdList = new ArrayList<>();
         this.trackingInfoLastStatusCheckTimeList = new ArrayList<>();
@@ -110,14 +108,6 @@ public final class WorkerTaskHolder
         }
 
         try {
-            // workerTask.getContext() should not be null, but it's possible if a worker is passed a message with a context map that
-            // has a key that is not the same as the servicePath, in which case the Worker Framework will pass a null context:
-            // https://github.com/WorkerFramework/worker-framework/blob/develop/worker-core/src/main/java/com/hpe/caf/worker/core/WorkerTaskImpl.java#L124
-            final byte[] contextBytes = workerTask.getContext() != null
-                ? workerTask.getContext()
-                : OBJECT_MAPPER.writeValueAsBytes(Collections.<String, byte[]>emptyMap());
-            final byte[] sourceInfoBytes = OBJECT_MAPPER.writeValueAsBytes(workerTask.getSourceInfo());
-
             workerTaskList.add(workerTask);
             partitionIdList.add(partitionId);
             jobIdList.add(jobId);
@@ -125,7 +115,6 @@ public final class WorkerTaskHolder
             taskApiVersionList.add(workerTask.getVersion());
             taskDataList.add(workerTask.getData());
             taskStatusList.add(workerTask.getStatus().name());
-            contextList.add(contextBytes);
             toList.add(workerTask.getTo());
             trackingInfoJobTaskIdList.add(workerTask.getTrackingInfo().getJobTaskId());
             trackingInfoLastStatusCheckTimeList.add(workerTask.getTrackingInfo().getLastStatusCheckTime().getTime());
@@ -133,7 +122,7 @@ public final class WorkerTaskHolder
             trackingInfoStatusCheckUrlList.add(workerTask.getTrackingInfo().getStatusCheckUrl());
             trackingInfoTrackingPipeList.add(workerTask.getTrackingInfo().getTrackingPipe());
             trackingInfoTrackToList.add(workerTask.getTrackingInfo().getTrackTo());
-            sourceInfoList.add(sourceInfoBytes);
+            sourceInfoList.add(OBJECT_MAPPER.writeValueAsBytes(workerTask.getSourceInfo()));
             correlationIdList.add(workerTask.getCorrelationId());
             return true;
         } catch (final JsonProcessingException jsonProcessingException) {
@@ -188,11 +177,6 @@ public final class WorkerTaskHolder
     public List<String> getTaskStatusList()
     {
         return taskStatusList;
-    }
-
-    public List<byte[]> getContextList()
-    {
-        return contextList;
     }
 
     public List<String> getToList()

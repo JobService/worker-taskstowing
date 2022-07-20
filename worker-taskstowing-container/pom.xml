@@ -317,7 +317,7 @@
                             <alias>postgres</alias>
                             <name>worker-taskstowing-postgres:${project.version}</name>
                             <build>
-                                <from>${dockerHubPublic}/library/postgres:11</from>
+                                <from>${dockerHubPublic}/library/postgres:14</from>
                                 <assembly>
                                     <mode>dir</mode>
                                     <targetDir>/docker-entrypoint-initdb.d</targetDir>

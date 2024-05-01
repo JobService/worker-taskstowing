@@ -40,6 +40,7 @@
         <dockerProjectVersion>${dockerVersionSeperator}${project.version}</dockerProjectVersion>
         <enforceCorrectDependencies>true</enforceCorrectDependencies>
         <enforceBannedDependencies>true</enforceBannedDependencies>
+        <projectDockerRegistry>worker-taskstowing-${project.version}.project-registries.local</projectDockerRegistry>
     </properties>
 
     <name>Task Stowing Worker</name>

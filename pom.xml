@@ -198,6 +198,39 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>com.github.cafapi.plugins.docker.versions</groupId>
+                <artifactId>docker-versions-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <imageManagement>
+                        <image>
+                            <repository>${dockerHubPublic}/cafapi/opensuse-jre11</repository>
+                            <tag>3.0.0</tag>
+                        </image>
+                        <image>
+                            <repository>${dockerHubPublic}/cloudesire/webdav</repository>
+                            <tag>latest</tag>
+                            <digest>sha256:92a7498003381dc5b939dbc7d53b5e6c380758f3947588230dfaf7e73718bda8</digest>
+                        </image>
+                        <image>
+                            <repository>${dockerHubPublic}/jamesdbloom/mockserver</repository>
+                            <tag>mockserver-5.11.2</tag>
+                        </image>
+                        <image>
+                            <repository>${dockerHubPublic}/library/postgres</repository>
+                            <tag>14</tag>
+                            <digest>sha256:a28005f051c26406f8e718e411a1068462a297dae049cddb513194d36dd8f29f</digest>
+                        </image>
+                        <image>
+                            <repository>${dockerHubPublic}/library/rabbitmq</repository>
+                            <tag>3-management</tag>
+                        </image>
+                    </imageManagement>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

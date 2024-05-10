@@ -262,7 +262,7 @@
                         <!-- WebDav -->
                         <image>
                             <alias>webdav</alias>
-                            <name>${dockerHubPublic}/cloudesire/webdav</name>
+                            <name>${projectDockerRegistry}/cloudesire/webdav</name>
                             <run>
                                 <volumes>
                                     <bind>
@@ -292,7 +292,7 @@
                         <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
+                            <name>${projectDockerRegistry}/library/rabbitmq</name>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>
@@ -317,7 +317,7 @@
                             <alias>postgres</alias>
                             <name>worker-taskstowing-postgres:${project.version}</name>
                             <build>
-                                <from>${dockerHubPublic}/library/postgres:14</from>
+                                <from>${projectDockerRegistry}/library/postgres</from>
                                 <assembly>
                                     <mode>dir</mode>
                                     <targetDir>/docker-entrypoint-initdb.d</targetDir>
@@ -352,7 +352,7 @@
                         <!-- Run a mock service to control what the statusCheckUrl returns during tests. -->
                         <image>
                             <alias>mock.service</alias>
-                            <name>${dockerHubPublic}/jamesdbloom/mockserver:mockserver-5.11.2</name>
+                            <name>${projectDockerRegistry}/jamesdbloom/mockserver</name>
                             <run>
                                 <ports>
                                     <port>${mock.service.port}:1080</port>
@@ -365,7 +365,7 @@
                             <alias>worker-taskstowing</alias>
                             <name>${dockerJobServiceOrg}worker-taskstowing${dockerProjectVersion}</name>
                             <build>
-                                <from>${dockerHubPublic}/cafapi/opensuse-jre11:3</from>
+                                <from>${projectDockerRegistry}/cafapi/opensuse-jre11</from>
                                 <cmd>
                                     <exec>
                                         <args>/maven/worker.sh</args>

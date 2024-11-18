@@ -365,7 +365,7 @@
                             <alias>worker-taskstowing</alias>
                             <name>${dockerJobServiceOrg}worker-taskstowing${dockerProjectVersion}</name>
                             <build>
-                                <from>${projectDockerRegistry}/cafapi/opensuse-jre11</from>
+                                <from>${projectDockerRegistry}/cafapi/oraclelinux-jre21</from>
                                 <cmd>
                                     <exec>
                                         <args>/maven/worker.sh</args>

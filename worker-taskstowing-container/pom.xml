@@ -48,6 +48,10 @@
             <artifactId>standard-worker-container</artifactId>
             <type>pom</type>
         </dependency>
+         <dependency>
+            <groupId>com.github.workerframework</groupId>
+            <artifactId>worker-default-configs</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.github.jobservice.workers.taskstowing</groupId>
             <artifactId>worker-taskstowing</artifactId>

@@ -81,7 +81,6 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>2.18.1</version>
-                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -97,7 +96,6 @@
                 <groupId>com.fasterxml.jackson.module</groupId>
                 <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
                 <version>2.18.1</version>
-                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>com.github.cafapi.common</groupId>

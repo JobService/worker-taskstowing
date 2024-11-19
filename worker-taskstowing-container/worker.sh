@@ -40,4 +40,4 @@ then
 fi
 
 cd /maven
-exec java $CAF_WORKER_JAVA_OPTS -cp "*:classpath" com.hpe.caf.worker.core.WorkerApplication server ${dropwizardConfig}
+exec java $CAF_WORKER_JAVA_OPTS -cp "*:classpath" com.github.workerframework.core.WorkerApplication server ${dropwizardConfig}

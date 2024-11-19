@@ -48,6 +48,10 @@
             <artifactId>standard-worker-container</artifactId>
             <type>pom</type>
         </dependency>
+         <dependency>
+            <groupId>com.github.workerframework</groupId>
+            <artifactId>worker-default-configs</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.github.jobservice.workers.taskstowing</groupId>
             <artifactId>worker-taskstowing</artifactId>
@@ -55,7 +59,7 @@
 
         <!-- Test dependencies -->
         <dependency>
-            <groupId>com.github.cafdataprocessing</groupId>
+            <groupId>com.github.cafdataprocessing.workers.document</groupId>
             <artifactId>worker-document</artifactId>
             <scope>test</scope>
         </dependency>
@@ -365,7 +369,7 @@
                             <alias>worker-taskstowing</alias>
                             <name>${dockerJobServiceOrg}worker-taskstowing${dockerProjectVersion}</name>
                             <build>
-                                <from>${projectDockerRegistry}/cafapi/opensuse-jre11</from>
+                                <from>${projectDockerRegistry}/cafapi/oraclelinux-jre21</from>
                                 <cmd>
                                     <exec>
                                         <args>/maven/worker.sh</args>

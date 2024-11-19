@@ -19,7 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.hpe.caf.api.worker.TaskMessage;
+import com.github.workerframework.api.TaskMessage;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -48,6 +48,7 @@ import org.testng.Assert;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,15 +101,16 @@ public final class QueueServices
         QUEUE_MESSAGES.put(outputQueueName, new ArrayList<>());
         QUEUE_MESSAGES.put(errorQueueName, new ArrayList<>());
         QUEUE_MESSAGES.put(forwardQueueName, new ArrayList<>());
-
+        Map queueArgs = new HashMap<String,String>();
+        queueArgs.put("x-queue-type", "quorum");
         LOGGER.info("Declare target worker queue...");
-        publisherChannel.queueDeclare(targetQueueName, true, false, false, null);
+        publisherChannel.queueDeclare(targetQueueName, true, false, false, queueArgs);
         LOGGER.info("Declare worker error queue...");
-        errorChannel.queueDeclare(errorQueueName, true, false, false, null);
+        errorChannel.queueDeclare(errorQueueName, true, false, false, queueArgs);
         LOGGER.info("Declare worker output queue...");
-        outputChannel.queueDeclare(outputQueueName, true, false, false, null);
+        outputChannel.queueDeclare(outputQueueName, true, false, false, queueArgs);
         LOGGER.info("Declare worker forward queue...");
-        forwardChannel.queueDeclare(forwardQueueName, true, false, false, null);
+        forwardChannel.queueDeclare(forwardQueueName, true, false, false, queueArgs);
 
         rabbitHost = new HttpHost(DOCKER_HOST_ADDRESS, Integer.parseInt(RABBITMQ_CTRL_PORT),
                                   "http");

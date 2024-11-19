@@ -15,31 +15,31 @@
  */
 package com.github.jobservice.workers.taskstowing.factory;
 
-import com.hpe.caf.api.Codec;
-import com.hpe.caf.api.ConfigurationException;
-import com.hpe.caf.api.ConfigurationSource;
-import com.hpe.caf.api.HealthResult;
-import com.hpe.caf.api.HealthStatus;
-import com.hpe.caf.api.worker.BulkWorker;
-import com.hpe.caf.api.worker.BulkWorkerRuntime;
-import com.hpe.caf.api.worker.DataStore;
-import com.hpe.caf.api.worker.InvalidTaskException;
-import com.hpe.caf.api.worker.JobStatus;
-import com.hpe.caf.api.worker.DivertedTaskHandler;
-import com.hpe.caf.api.worker.DivertedTaskAction;
-import com.hpe.caf.api.worker.TaskInformation;
-import com.hpe.caf.api.worker.TaskMessage;
-import com.hpe.caf.api.worker.TaskRejectedException;
-import com.hpe.caf.api.worker.Worker;
-import com.hpe.caf.api.worker.WorkerCallback;
-import com.hpe.caf.api.worker.WorkerException;
-import com.hpe.caf.api.worker.WorkerFactory;
-import com.hpe.caf.api.worker.WorkerTask;
-import com.hpe.caf.api.worker.WorkerTaskData;
+import com.github.cafapi.common.api.Codec;
+import com.github.cafapi.common.api.ConfigurationException;
+import com.github.cafapi.common.api.ConfigurationSource;
+import com.github.cafapi.common.api.HealthResult;
+import com.github.cafapi.common.api.HealthStatus;
 import com.github.jobservice.workers.taskstowing.TaskStowingBulkWorker;
 import com.github.jobservice.workers.taskstowing.TaskStowingWorker;
 import com.github.jobservice.workers.taskstowing.WorkerTaskHolder;
 import com.github.jobservice.workers.taskstowing.database.DatabaseClient;
+import com.github.workerframework.api.BulkWorker;
+import com.github.workerframework.api.BulkWorkerRuntime;
+import com.github.workerframework.api.DataStore;
+import com.github.workerframework.api.DivertedTaskAction;
+import com.github.workerframework.api.DivertedTaskHandler;
+import com.github.workerframework.api.InvalidTaskException;
+import com.github.workerframework.api.JobStatus;
+import com.github.workerframework.api.TaskInformation;
+import com.github.workerframework.api.TaskMessage;
+import com.github.workerframework.api.TaskRejectedException;
+import com.github.workerframework.api.Worker;
+import com.github.workerframework.api.WorkerCallback;
+import com.github.workerframework.api.WorkerException;
+import com.github.workerframework.api.WorkerFactory;
+import com.github.workerframework.api.WorkerTask;
+import com.github.workerframework.api.WorkerTaskData;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -102,7 +102,6 @@ public final class TaskStowingWorkerFactory implements WorkerFactory, DivertedTa
     public DivertedTaskAction handleDivertedTask(
         final TaskMessage tm,
         final TaskInformation taskInformation,
-        final boolean poison,
         final Map<String, Object> headers,
         final Codec codec,
         final JobStatus jobStatus,

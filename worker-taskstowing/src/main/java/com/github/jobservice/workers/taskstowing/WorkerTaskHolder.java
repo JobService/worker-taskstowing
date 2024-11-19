@@ -17,12 +17,12 @@ package com.github.jobservice.workers.taskstowing;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.cafapi.common.api.Codec;
+import com.github.jobservice.util.JobTaskId;
+import com.github.workerframework.api.TrackingInfo;
+import com.github.workerframework.api.WorkerResponse;
+import com.github.workerframework.api.WorkerTask;
 import com.google.common.base.Strings;
-import com.hpe.caf.api.Codec;
-import com.hpe.caf.api.worker.TrackingInfo;
-import com.hpe.caf.api.worker.WorkerResponse;
-import com.hpe.caf.api.worker.WorkerTask;
-import com.hpe.caf.services.job.util.JobTaskId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

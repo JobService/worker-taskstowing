@@ -15,12 +15,12 @@
  */
 package com.github.jobservice.workers.taskstowing;
 
-import com.hpe.caf.api.Codec;
-import com.hpe.caf.api.worker.WorkerResponse;
-import com.hpe.caf.api.worker.WorkerTask;
+import com.github.cafapi.common.api.Codec;
 import com.github.jobservice.workers.taskstowing.database.DatabaseClient;
 import com.github.jobservice.workers.taskstowing.database.DatabaseExceptionChecker;
-import com.hpe.caf.api.worker.TaskRejectedException;
+import com.github.workerframework.api.TaskRejectedException;
+import com.github.workerframework.api.WorkerResponse;
+import com.github.workerframework.api.WorkerTask;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;

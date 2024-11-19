@@ -4,7 +4,7 @@
 ${version-number}
 
 #### New Features
-- None
+- US975260: Refactor to remove HPE references in package names
 
 #### Patch Fixes Included
 - US572082 - Gson version upgraded to [2.9.1](https://github.com/google/gson/releases/tag/gson-parent-2.9.1)

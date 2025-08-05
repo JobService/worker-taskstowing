@@ -24,6 +24,10 @@ import com.github.jobservice.workers.taskstowing.TaskStowingBulkWorker;
 import com.github.jobservice.workers.taskstowing.TaskStowingWorker;
 import com.github.jobservice.workers.taskstowing.WorkerTaskHolder;
 import com.github.jobservice.workers.taskstowing.database.DatabaseClient;
+
+import java.util.Map;
+import java.util.Objects;
+
 import com.github.workerframework.api.BulkWorker;
 import com.github.workerframework.api.BulkWorkerRuntime;
 import com.github.workerframework.api.DataStore;
@@ -36,12 +40,11 @@ import com.github.workerframework.api.TaskMessage;
 import com.github.workerframework.api.TaskRejectedException;
 import com.github.workerframework.api.Worker;
 import com.github.workerframework.api.WorkerCallback;
+import com.github.workerframework.api.WorkerConfiguration;
 import com.github.workerframework.api.WorkerException;
 import com.github.workerframework.api.WorkerFactory;
 import com.github.workerframework.api.WorkerTask;
 import com.github.workerframework.api.WorkerTaskData;
-import java.util.Map;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,13 +79,18 @@ public final class TaskStowingWorkerFactory implements WorkerFactory, DivertedTa
     @Override
     public String getInvalidTaskQueue()
     {
-        return configuration.getFailureQueue();
+        return configuration.getInvalidQueue();
     }
 
     @Override
     public int getWorkerThreads()
     {
         return configuration.getThreads();
+    }
+
+    @Override
+    public WorkerConfiguration getWorkerConfiguration() {
+        return configuration;
     }
 
     @Override

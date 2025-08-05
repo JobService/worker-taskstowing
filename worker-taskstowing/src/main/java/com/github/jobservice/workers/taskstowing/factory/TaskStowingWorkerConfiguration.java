@@ -31,6 +31,10 @@ public final class TaskStowingWorkerConfiguration extends WorkerConfiguration
     @Size(min = 1)
     private String failureQueue;
 
+    @NotNull
+    @Size(min = 1)
+    private String invalidQueue;
+
     @Min(1)
     @Max(20)
     private int threads;
@@ -83,6 +87,14 @@ public final class TaskStowingWorkerConfiguration extends WorkerConfiguration
     public void setFailureQueue(final String failureQueue)
     {
         this.failureQueue = failureQueue;
+    }
+
+    public String getInvalidQueue() {
+        return invalidQueue;
+    }
+
+    public void setInvalidQueue(String invalidQueue) {
+        this.invalidQueue = invalidQueue;
     }
 
     public int getThreads()

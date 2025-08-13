@@ -36,7 +36,6 @@ import com.github.workerframework.api.TaskMessage;
 import com.github.workerframework.api.TaskRejectedException;
 import com.github.workerframework.api.Worker;
 import com.github.workerframework.api.WorkerCallback;
-import com.github.workerframework.api.WorkerConfiguration;
 import com.github.workerframework.api.WorkerException;
 import com.github.workerframework.api.WorkerFactory;
 import com.github.workerframework.api.WorkerTask;
@@ -77,18 +76,13 @@ public final class TaskStowingWorkerFactory implements WorkerFactory, DivertedTa
     @Override
     public String getInvalidTaskQueue()
     {
-        return configuration.getInvalidQueue();
+        return configuration.getFailureQueue();
     }
 
     @Override
     public int getWorkerThreads()
     {
         return configuration.getThreads();
-    }
-
-    @Override
-    public WorkerConfiguration getWorkerConfiguration() {
-        return configuration;
     }
 
     @Override
